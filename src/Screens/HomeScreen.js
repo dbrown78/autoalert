@@ -9,8 +9,8 @@ const DTC_CODES = {
   'P0442': { short: 'EVAP System Leak (Small)', severity: 'Low', urgency: 'Check gas cap first' },
 };
 
-const COLORS = { Medium:'#f39c12', High:'#e74c3c', Low:'#27ae60' };
-const URGENCY_COLORS = { 'Check gas cap first':'#27ae60', 'Within 1 month':'#27ae60', 'Within 2 weeks':'#f39c12', 'Within 1 week':'#e74c3c' };
+const COLORS = { Medium: '#f39c12', High: '#e74c3c', Low: '#27ae60' };
+const URGENCY_COLORS = { 'Check gas cap first': '#27ae60', 'Within 1 month': '#27ae60', 'Within 2 weeks': '#f39c12', 'Within 1 week': '#e74c3c' };
 
 export default function HomeScreen({ navigation }) {
   const { user, logout } = useAuth();
@@ -28,17 +28,22 @@ export default function HomeScreen({ navigation }) {
       <Text style={S.heading}>Active Alerts ({codes.length})</Text>
       <ScrollView style={S.scroll}>
         {codes.map(c => (
-          <TouchableOpacity key={c} style={S.card}>
-            <View style={{flex:1}}>
+          <TouchableOpacity
+            key={c}
+            style={S.card}
+            onPress={() => navigation.navigate('DTCDetail', { code: c })}
+          >
+            <View style={{ flex: 1 }}>
               <Text style={S.codeText}>{c}</Text>
               <Text style={S.codeSub}>{DTC_CODES[c].short}</Text>
-              <Text style={[S.urgency, {color: URGENCY_COLORS[DTC_CODES[c].urgency]}]}>
+              <Text style={[S.urgency, { color: URGENCY_COLORS[DTC_CODES[c].urgency] }]}>
                 ⏱ {DTC_CODES[c].urgency}
               </Text>
             </View>
-            <View style={[S.badge, {backgroundColor: COLORS[DTC_CODES[c].severity]}]}>
+            <View style={[S.badge, { backgroundColor: COLORS[DTC_CODES[c].severity] }]}>
               <Text style={S.badgeTxt}>{DTC_CODES[c].severity}</Text>
             </View>
+            <Text style={S.arrow}>›</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -50,19 +55,20 @@ export default function HomeScreen({ navigation }) {
 }
 
 const S = StyleSheet.create({
-  container:{flex:1,backgroundColor:'#1a1a2e',padding:20},
-  header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginTop:40,marginBottom:8},
-  logo:{fontSize:28,fontWeight:'bold',color:'#00d4ff'},
-  logoutBtn:{color:'#e74c3c',fontSize:14,fontWeight:'bold'},
-  welcome:{color:'#fff',fontSize:16,opacity:0.8,marginBottom:16},
-  heading:{fontSize:20,color:'#fff',fontWeight:'bold',marginBottom:12},
-  scroll:{flex:1},
-  card:{backgroundColor:'#16213e',borderRadius:12,padding:16,marginBottom:12,flexDirection:'row',alignItems:'center'},
-  codeText:{color:'#00d4ff',fontSize:18,fontWeight:'bold'},
-  codeSub:{color:'#fff',fontSize:13,opacity:0.8,marginTop:2},
-  urgency:{fontSize:11,marginTop:4,fontWeight:'600'},
-  badge:{paddingHorizontal:10,paddingVertical:4,borderRadius:20,marginLeft:8},
-  badgeTxt:{color:'#fff',fontSize:12,fontWeight:'bold'},
-  red:{backgroundColor:'#e74c3c',padding:16,borderRadius:30,alignItems:'center',marginTop:8},
-  btnTxt:{color:'#fff',fontSize:16,fontWeight:'bold'},
+  container: { flex: 1, backgroundColor: '#1a1a2e', padding: 20 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40, marginBottom: 8 },
+  logo: { fontSize: 28, fontWeight: 'bold', color: '#00d4ff' },
+  logoutBtn: { color: '#e74c3c', fontSize: 14, fontWeight: 'bold' },
+  welcome: { color: '#fff', fontSize: 16, opacity: 0.8, marginBottom: 16 },
+  heading: { fontSize: 20, color: '#fff', fontWeight: 'bold', marginBottom: 12 },
+  scroll: { flex: 1 },
+  card: { backgroundColor: '#16213e', borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center' },
+  codeText: { color: '#00d4ff', fontSize: 18, fontWeight: 'bold' },
+  codeSub: { color: '#fff', fontSize: 13, opacity: 0.8, marginTop: 2 },
+  urgency: { fontSize: 11, marginTop: 4, fontWeight: '600' },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, marginLeft: 8 },
+  badgeTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  arrow: { color: '#00d4ff', fontSize: 24, marginLeft: 8, opacity: 0.7 },
+  red: { backgroundColor: '#e74c3c', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 8 },
+  btnTxt: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
 });
