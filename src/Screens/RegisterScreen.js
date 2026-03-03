@@ -23,7 +23,7 @@ export default function RegisterScreen({ navigation }) {
         {loading ? <ActivityIndicator color="#1a1a2e"/> : <Text style={S.btnTxt}>Create Account</Text>}
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={S.link}>Already have an account? Log in</Text>}
+        <Text style={S.link}>Already have an account? Log in</Text>
       </TouchableOpacity>
     </View>
   );
