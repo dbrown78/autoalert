@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import client from '../api/client';
 import CostComparisonCard from '../components/CostComparisonCard';
+import { useAuth } from '../context/AuthContext';
 
 const SEVERITY_COLORS = { high: '#e74c3c', medium: '#f39c12', low: '#27ae60' };
 const URGENCY_COLORS = { 'Check gas cap first': '#27ae60', 'Within 1 month': '#27ae60', 'Within 2 weeks': '#f39c12', 'Within 1 week': '#e74c3c' };
@@ -10,16 +11,26 @@ const capitalize = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
 export default function DTCDetailScreen({ route, navigation }) {
   const { code } = route.params;
+  const { selectedVehicle } = useAuth();
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    client.get(`/dtc/${code}`)
+    let url = `/dtc/${code}`;
+    if (selectedVehicle) {
+      const params = new URLSearchParams({
+        make: selectedVehicle.make,
+        model: selectedVehicle.model,
+        year: selectedVehicle.year,
+      });
+      url += `?${params.toString()}`;
+    }
+    client.get(url)
       .then(res => setDetail(res.data.dtc))
       .catch(() => setError('Could not load details for ' + code))
       .finally(() => setLoading(false));
-  }, [code]);
+  }, [code, selectedVehicle]);
 
   if (loading) {
     return (
@@ -65,6 +76,13 @@ export default function DTCDetailScreen({ route, navigation }) {
               </View>
             )}
           </View>
+          {detail.vehicle_specific && selectedVehicle && (
+            <View style={S.vehicleBadge}>
+              <Text style={S.vehicleBadgeTxt}>
+                🚗 Matched to your {selectedVehicle.year} {selectedVehicle.make} {selectedVehicle.model}
+              </Text>
+            </View>
+          )}
         </View>
 
         <Section title="What's happening?">
@@ -88,6 +106,12 @@ export default function DTCDetailScreen({ route, navigation }) {
             </View>
           ))}
         </Section>
+
+        {detail.notes && (
+          <Section title="Vehicle-specific notes">
+            <Text style={S.bodyText}>{detail.notes}</Text>
+          </Section>
+        )}
 
         {detail.oem_cost_min != null && (
           <CostComparisonCard
@@ -131,9 +155,11 @@ const S = StyleSheet.create({
   heroCard: { backgroundColor: '#16213e', borderRadius: 16, padding: 20, marginBottom: 16, alignItems: 'center' },
   codeLabel: { color: '#00d4ff', fontSize: 32, fontWeight: 'bold', letterSpacing: 2 },
   codeShort: { color: '#fff', fontSize: 15, opacity: 0.85, textAlign: 'center', marginTop: 6, marginBottom: 14 },
-  badgeRow: { flexDirection: 'row', gap: 8 },
+  badgeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
   badge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   badgeTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  vehicleBadge: { marginTop: 10, backgroundColor: 'rgba(0,212,255,0.15)', borderWidth: 1, borderColor: '#00d4ff', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
+  vehicleBadgeTxt: { color: '#00d4ff', fontSize: 12, fontWeight: '600' },
   section: { backgroundColor: '#16213e', borderRadius: 14, padding: 16, marginBottom: 14 },
   sectionTitle: { color: '#00d4ff', fontSize: 15, fontWeight: 'bold', marginBottom: 12 },
   bodyText: { color: '#fff', fontSize: 14, lineHeight: 22, opacity: 0.85 },

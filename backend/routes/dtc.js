@@ -19,15 +19,54 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/dtc/:code
+// GET /api/dtc/:code?make=Toyota&model=Camry&year=2012
+// When make+year are provided, checks for a vehicle-specific override and merges it.
 router.get('/:code', async (req, res) => {
+  const code = req.params.code.toUpperCase();
+  const { make, model, year } = req.query;
+
   try {
     const { rows } = await pool.query(
       'SELECT * FROM dtc_codes WHERE code = $1',
-      [req.params.code.toUpperCase()]
+      [code]
     );
     if (rows.length === 0) return res.status(404).json({ message: 'DTC code not found' });
-    res.json({ dtc: rows[0] });
+
+    const dtc = { ...rows[0], vehicle_specific: false };
+
+    if (make && year) {
+      const yearInt = parseInt(year, 10);
+      const { rows: overrides } = await pool.query(
+        `SELECT * FROM dtc_vehicle_overrides
+         WHERE dtc_code = $1
+           AND LOWER(make) = LOWER($2)
+           AND (model IS NULL OR LOWER(model) = LOWER($3))
+           AND (year_min IS NULL OR year_min <= $4)
+           AND (year_max IS NULL OR year_max >= $4)
+         ORDER BY
+           (model IS NOT NULL)::int DESC,
+           (year_min IS NOT NULL)::int DESC
+         LIMIT 1`,
+        [code, make, model || '', yearInt]
+      );
+
+      if (overrides.length > 0) {
+        const ov = overrides[0];
+        const mergeFields = [
+          'possible_causes', 'symptoms',
+          'oem_cost_min', 'oem_cost_max',
+          'aftermarket_cost_min', 'aftermarket_cost_max',
+          'labor_hours_min', 'labor_hours_max',
+          'diy_difficulty', 'notes',
+        ];
+        for (const field of mergeFields) {
+          if (ov[field] != null) dtc[field] = ov[field];
+        }
+        dtc.vehicle_specific = true;
+      }
+    }
+
+    res.json({ dtc });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
