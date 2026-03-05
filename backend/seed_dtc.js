@@ -18,7 +18,9 @@ async function seed() {
       aftermarket_cost_max  INTEGER,
       labor_hours_min       NUMERIC(4,1),
       labor_hours_max       NUMERIC(4,1),
-      diy_difficulty        VARCHAR(10) CHECK (diy_difficulty IN ('easy', 'moderate', 'hard'))
+      diy_difficulty        VARCHAR(10) CHECK (diy_difficulty IN ('easy', 'moderate', 'hard')),
+      drive_safety          VARCHAR(10) CHECK (drive_safety IN ('yes', 'caution', 'no')),
+      drive_safety_reason   TEXT
     )
   `);
   console.log('Table ready');
@@ -41,6 +43,8 @@ async function seed() {
       aftermarket_cost_min: 40, aftermarket_cost_max: 250,
       labor_hours_min: 1.0, labor_hours_max: 2.5,
       diy_difficulty: 'easy',
+      drive_safety: 'no',
+      drive_safety_reason: 'Active misfires can destroy the catalytic converter within minutes and may cause sudden loss of power. Pull over safely and do not continue driving until diagnosed.',
     },
     {
       code: 'P0301',
@@ -59,6 +63,8 @@ async function seed() {
       aftermarket_cost_min: 15, aftermarket_cost_max: 180,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'easy',
+      drive_safety: 'no',
+      drive_safety_reason: 'A single-cylinder misfire causes rough running that can rapidly damage the catalytic converter and may result in stalling. Have the vehicle towed or driven only to the nearest shop.',
     },
     {
       code: 'P0420',
@@ -77,6 +83,8 @@ async function seed() {
       aftermarket_cost_min: 200, aftermarket_cost_max: 600,
       labor_hours_min: 1.5, labor_hours_max: 3.0,
       diy_difficulty: 'moderate',
+      drive_safety: 'caution',
+      drive_safety_reason: 'The vehicle is safe to drive short distances, but continued driving will cause further damage to the catalytic converter. Schedule a repair soon.',
     },
     {
       code: 'P0430',
@@ -94,6 +102,8 @@ async function seed() {
       aftermarket_cost_min: 200, aftermarket_cost_max: 600,
       labor_hours_min: 1.5, labor_hours_max: 3.0,
       diy_difficulty: 'moderate',
+      drive_safety: 'caution',
+      drive_safety_reason: 'Drivability is not immediately affected, but continuing to drive accelerates catalyst wear. Avoid extended highway driving and arrange repair within the next two weeks.',
     },
     {
       code: 'P0171',
@@ -112,6 +122,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 400,
       labor_hours_min: 1.0, labor_hours_max: 3.0,
       diy_difficulty: 'moderate',
+      drive_safety: 'caution',
+      drive_safety_reason: 'A lean fuel condition can cause engine hesitation and long-term damage to pistons and valves. Drive gently and avoid hard acceleration until repaired.',
     },
     {
       code: 'P0174',
@@ -130,6 +142,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 400,
       labor_hours_min: 1.0, labor_hours_max: 3.0,
       diy_difficulty: 'moderate',
+      drive_safety: 'caution',
+      drive_safety_reason: 'Running lean on both banks suggests a significant intake leak or fuel delivery problem. Drive carefully and avoid highway speeds until the cause is identified.',
     },
     {
       code: 'P0128',
@@ -147,6 +161,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 150,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'easy',
+      drive_safety: 'yes',
+      drive_safety_reason: 'A stuck-open thermostat does not affect vehicle safety. The engine may take longer to warm up and the heater may be less effective, but normal driving is fine.',
     },
     {
       code: 'P0442',
@@ -165,6 +181,8 @@ async function seed() {
       aftermarket_cost_min: 10, aftermarket_cost_max: 150,
       labor_hours_min: 0.5, labor_hours_max: 2.0,
       diy_difficulty: 'easy',
+      drive_safety: 'yes',
+      drive_safety_reason: 'A small evaporative emissions leak does not affect engine performance or safety. Check and tighten your gas cap first — that alone clears this code in most cases.',
     },
     {
       code: 'P0455',
@@ -183,6 +201,8 @@ async function seed() {
       aftermarket_cost_min: 10, aftermarket_cost_max: 250,
       labor_hours_min: 0.5, labor_hours_max: 2.0,
       diy_difficulty: 'easy',
+      drive_safety: 'yes',
+      drive_safety_reason: 'A large EVAP leak is an emissions problem only and does not affect how the vehicle drives. Check your gas cap first, then schedule a repair at your convenience.',
     },
     {
       code: 'P0446',
@@ -200,6 +220,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 100,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'moderate',
+      drive_safety: 'yes',
+      drive_safety_reason: 'An EVAP vent valve issue is purely an emissions fault with no impact on drivability or safety. Normal driving is fine while you arrange a repair.',
     },
     {
       code: 'P0401',
@@ -218,6 +240,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 200,
       labor_hours_min: 1.0, labor_hours_max: 2.5,
       diy_difficulty: 'moderate',
+      drive_safety: 'caution',
+      drive_safety_reason: 'Reduced EGR flow causes engine knock under load, which can damage pistons over time. Avoid hard acceleration and highway driving until repaired.',
     },
     {
       code: 'P0011',
@@ -236,6 +260,8 @@ async function seed() {
       aftermarket_cost_min: 200, aftermarket_cost_max: 700,
       labor_hours_min: 3.0, labor_hours_max: 8.0,
       diy_difficulty: 'hard',
+      drive_safety: 'caution',
+      drive_safety_reason: 'Cam timing issues reduce engine efficiency and can cause rough running. Drive gently — avoid high RPM — and have it diagnosed promptly to prevent timing chain or engine damage.',
     },
     {
       code: 'P0340',
@@ -253,6 +279,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 100,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'easy',
+      drive_safety: 'no',
+      drive_safety_reason: 'Loss of cam position signal can cause the engine to stall without warning. Do not drive until the sensor is replaced — have the vehicle towed if it will not start reliably.',
     },
     {
       code: 'P0507',
@@ -271,6 +299,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 120,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'easy',
+      drive_safety: 'yes',
+      drive_safety_reason: 'High idle is an annoyance but poses no immediate safety risk. Normal driving is fine while you arrange a repair.',
     },
     {
       code: 'P0562',
@@ -289,6 +319,8 @@ async function seed() {
       aftermarket_cost_min: 80, aftermarket_cost_max: 350,
       labor_hours_min: 0.5, labor_hours_max: 2.0,
       diy_difficulty: 'easy',
+      drive_safety: 'caution',
+      drive_safety_reason: 'Low voltage can cause electrical systems to fail unexpectedly. Avoid long trips and have the charging system tested promptly.',
     },
     {
       code: 'P0500',
@@ -306,6 +338,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 100,
       labor_hours_min: 0.5, labor_hours_max: 2.0,
       diy_difficulty: 'moderate',
+      drive_safety: 'caution',
+      drive_safety_reason: 'A faulty speed sensor affects ABS and transmission shift logic. Drive carefully and avoid highway speeds until repaired.',
     },
     {
       code: 'P0113',
@@ -323,6 +357,8 @@ async function seed() {
       aftermarket_cost_min: 15, aftermarket_cost_max: 60,
       labor_hours_min: 0.5, labor_hours_max: 1.0,
       diy_difficulty: 'easy',
+      drive_safety: 'yes',
+      drive_safety_reason: 'The IAT sensor only affects cold-start fuel calibration. Normal driving is safe while you schedule a repair.',
     },
     {
       code: 'P0102',
@@ -341,6 +377,8 @@ async function seed() {
       aftermarket_cost_min: 10, aftermarket_cost_max: 150,
       labor_hours_min: 0.5, labor_hours_max: 1.0,
       diy_difficulty: 'easy',
+      drive_safety: 'caution',
+      drive_safety_reason: 'A low MAF signal causes the engine to run improperly. Avoid hard acceleration and extended driving until repaired.',
     },
     {
       code: 'P0131',
@@ -359,6 +397,8 @@ async function seed() {
       aftermarket_cost_min: 30, aftermarket_cost_max: 120,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'easy',
+      drive_safety: 'caution',
+      drive_safety_reason: 'A faulty upstream O2 sensor can cause the engine to run lean over time. Drive gently and schedule repair soon.',
     },
     {
       code: 'P0135',
@@ -377,6 +417,8 @@ async function seed() {
       aftermarket_cost_min: 5, aftermarket_cost_max: 120,
       labor_hours_min: 0.5, labor_hours_max: 1.5,
       diy_difficulty: 'easy',
+      drive_safety: 'caution',
+      drive_safety_reason: 'The O2 heater only affects cold-start accuracy. Short drives are fine, but extended driving with incorrect fuel trim should be avoided.',
     },
   ];
 
@@ -386,8 +428,9 @@ async function seed() {
          code, short_description, description, possible_causes, symptoms,
          severity, urgency, repairs,
          oem_cost_min, oem_cost_max, aftermarket_cost_min, aftermarket_cost_max,
-         labor_hours_min, labor_hours_max, diy_difficulty
-       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         labor_hours_min, labor_hours_max, diy_difficulty,
+         drive_safety, drive_safety_reason
+       ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
        ON CONFLICT (code) DO UPDATE SET
          short_description    = EXCLUDED.short_description,
          description          = EXCLUDED.description,
@@ -402,12 +445,15 @@ async function seed() {
          aftermarket_cost_max = EXCLUDED.aftermarket_cost_max,
          labor_hours_min      = EXCLUDED.labor_hours_min,
          labor_hours_max      = EXCLUDED.labor_hours_max,
-         diy_difficulty       = EXCLUDED.diy_difficulty`,
+         diy_difficulty       = EXCLUDED.diy_difficulty,
+         drive_safety         = EXCLUDED.drive_safety,
+         drive_safety_reason  = EXCLUDED.drive_safety_reason`,
       [
         dtc.code, dtc.short_description, dtc.description, dtc.possible_causes, dtc.symptoms,
         dtc.severity, dtc.urgency, JSON.stringify(dtc.repairs),
         dtc.oem_cost_min, dtc.oem_cost_max, dtc.aftermarket_cost_min, dtc.aftermarket_cost_max,
         dtc.labor_hours_min, dtc.labor_hours_max, dtc.diy_difficulty,
+        dtc.drive_safety, dtc.drive_safety_reason,
       ]
     );
     console.log(`  seeded ${dtc.code}`);

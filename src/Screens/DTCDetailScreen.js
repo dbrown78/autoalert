@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import client from '../api/client';
 import CostComparisonCard from '../components/CostComparisonCard';
+import DriveSafetyCard from '../components/DriveSafetyCard';
 import { useAuth } from '../context/AuthContext';
 
 const SEVERITY_COLORS = { high: '#e74c3c', medium: '#f39c12', low: '#27ae60' };
@@ -69,6 +70,11 @@ export default function DTCDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView style={S.scroll} showsVerticalScrollIndicator={false}>
+        <DriveSafetyCard
+          driveSafety={detail.drive_safety}
+          driveSafetyReason={detail.drive_safety_reason}
+        />
+
         <View style={S.heroCard}>
           <Text style={S.codeLabel}>{detail.code}</Text>
           <Text style={S.codeShort}>{detail.short_description}</Text>
