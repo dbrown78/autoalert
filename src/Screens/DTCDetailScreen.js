@@ -27,7 +27,13 @@ export default function DTCDetailScreen({ route, navigation }) {
       url += `?${params.toString()}`;
     }
     client.get(url)
-      .then(res => setDetail(res.data.dtc))
+      .then(res => {
+        setDetail(res.data.dtc);
+        client.post('/scans', {
+          dtc_code: code,
+          vehicle_id: selectedVehicle?.id ?? null,
+        }).catch(() => {}); // fire-and-forget, silent on failure
+      })
       .catch(() => setError('Could not load details for ' + code))
       .finally(() => setLoading(false));
   }, [code, selectedVehicle]);

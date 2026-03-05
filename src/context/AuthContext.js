@@ -30,14 +30,18 @@ export const AuthProvider = ({ children }) => {
   const [appReady, setAppReady] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
 
-  const loadSelectedVehicle = async (authToken) => {
+  const setAuth = (tok) => {
+    if (tok) {
+      client.defaults.headers.common['Authorization'] = `Bearer ${tok}`;
+    } else {
+      delete client.defaults.headers.common['Authorization'];
+    }
+  };
+
+  const loadSelectedVehicle = async () => {
     try {
-      const res = await client.get('/vehicles', {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
-      if (res.data.vehicles.length > 0) {
-        setSelectedVehicle(res.data.vehicles[0]);
-      }
+      const res = await client.get('/vehicles');
+      if (res.data.vehicles.length > 0) setSelectedVehicle(res.data.vehicles[0]);
     } catch {
       // Non-fatal — DTC screen works without a vehicle
     }
@@ -48,14 +52,14 @@ export const AuthProvider = ({ children }) => {
       try {
         const savedToken = await storage.getItem('token');
         if (savedToken) {
-          const res = await client.get('/auth/me', {
-            headers: { Authorization: `Bearer ${savedToken}` },
-          });
+          setAuth(savedToken);
+          const res = await client.get('/auth/me');
           setUser(res.data.user);
           setToken(savedToken);
-          await loadSelectedVehicle(savedToken);
+          await loadSelectedVehicle();
         }
-      } catch (err) {
+      } catch {
+        setAuth(null);
         await storage.deleteItem('token');
       } finally {
         setAppReady(true);
@@ -69,10 +73,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const res = await client.post('/auth/register', { name, email, password });
+      setAuth(res.data.token);
       setUser(res.data.user);
       setToken(res.data.token);
       await storage.setItem('token', res.data.token);
-      await loadSelectedVehicle(res.data.token);
+      await loadSelectedVehicle();
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     } finally {
@@ -85,10 +90,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const res = await client.post('/auth/login', { email, password });
+      setAuth(res.data.token);
       setUser(res.data.user);
       setToken(res.data.token);
       await storage.setItem('token', res.data.token);
-      await loadSelectedVehicle(res.data.token);
+      await loadSelectedVehicle();
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     } finally {
@@ -97,6 +103,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    setAuth(null);
     setUser(null);
     setToken(null);
     setSelectedVehicle(null);

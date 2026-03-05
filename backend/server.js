@@ -10,6 +10,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/dtc', require('./routes/dtc'));
 app.use('/api/mechanics', require('./routes/mechanics'));
+app.use('/api/scans', require('./routes/scans'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

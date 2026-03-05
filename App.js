@@ -7,6 +7,7 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import DTCDetailScreen from './src/screens/DTCDetailScreen';
 import MechanicFinderScreen from './src/screens/MechanicFinderScreen';
+import ScanHistoryScreen from './src/screens/ScanHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,7 @@ function AppNavigator() {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="DTCDetail" component={DTCDetailScreen} />
             <Stack.Screen name="MechanicFinder" component={MechanicFinderScreen} />
+            <Stack.Screen name="ScanHistory" component={ScanHistoryScreen} />
           </>
         ) : (
           <>

@@ -20,9 +20,14 @@ export default function HomeScreen({ navigation }) {
     <View style={S.container}>
       <View style={S.header}>
         <Text style={S.logo}>🚗 AutoAlert</Text>
-        <TouchableOpacity onPress={logout}>
-          <Text style={S.logoutBtn}>Log out</Text>
-        </TouchableOpacity>
+        <View style={S.headerActions}>
+          <TouchableOpacity onPress={() => navigation.navigate('ScanHistory')} style={S.historyBtn}>
+            <Text style={S.historyTxt}>History</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout}>
+            <Text style={S.logoutBtn}>Log out</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <Text style={S.welcome}>Welcome back, {user?.name} 👋</Text>
       <Text style={S.heading}>Active Alerts ({codes.length})</Text>
@@ -58,6 +63,9 @@ const S = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#1a1a2e', padding: 20 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 40, marginBottom: 8 },
   logo: { fontSize: 28, fontWeight: 'bold', color: '#00d4ff' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  historyBtn: {},
+  historyTxt: { color: '#00d4ff', fontSize: 14, fontWeight: 'bold' },
   logoutBtn: { color: '#e74c3c', fontSize: 14, fontWeight: 'bold' },
   welcome: { color: '#fff', fontSize: 16, opacity: 0.8, marginBottom: 16 },
   heading: { fontSize: 20, color: '#fff', fontWeight: 'bold', marginBottom: 12 },
