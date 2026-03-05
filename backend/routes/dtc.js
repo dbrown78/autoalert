@@ -66,6 +66,12 @@ router.get('/:code', async (req, res) => {
       }
     }
 
+    // Generate YouTube search query
+    const searchParts = [code];
+    if (dtc.vehicle_specific && make && model) searchParts.push(make, model);
+    searchParts.push(dtc.short_description, 'fix');
+    dtc.youtube_search_query = searchParts.join(' ');
+
     res.json({ dtc });
   } catch (err) {
     console.error(err);

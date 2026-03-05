@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import client from '../api/client';
 import CostComparisonCard from '../components/CostComparisonCard';
+import DIYRepairCard from '../components/DIYRepairCard';
 import DriveSafetyCard from '../components/DriveSafetyCard';
 import { useAuth } from '../context/AuthContext';
 
@@ -136,6 +137,15 @@ export default function DTCDetailScreen({ route, navigation }) {
             diyDifficulty={detail.diy_difficulty}
           />
         )}
+
+        <DIYRepairCard
+          dtcCode={detail.code}
+          shortDescription={detail.short_description}
+          make={selectedVehicle?.make}
+          model={selectedVehicle?.model}
+          diyDifficulty={detail.diy_difficulty}
+          youtubeSearchQuery={detail.youtube_search_query}
+        />
 
         <TouchableOpacity
           style={S.mechanicBtn}
