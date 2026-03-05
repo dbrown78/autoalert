@@ -125,6 +125,18 @@ export default function DTCDetailScreen({ route, navigation }) {
           />
         )}
 
+        <TouchableOpacity
+          style={S.mechanicBtn}
+          onPress={() => navigation.navigate('MechanicFinder', {
+            dtcCode: detail.code,
+            make: selectedVehicle?.make ?? null,
+            model: selectedVehicle?.model ?? null,
+            year: selectedVehicle?.year ?? null,
+          })}
+        >
+          <Text style={S.mechanicTxt}>🔧 Find a Mechanic Near Me</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={S.emergencyBtn}>
           <Text style={S.emergencyTxt}>🆘 Roadside Assistance</Text>
         </TouchableOpacity>
@@ -166,6 +178,8 @@ const S = StyleSheet.create({
   bulletRow: { flexDirection: 'row', marginBottom: 6 },
   bullet: { color: '#00d4ff', fontSize: 14, marginRight: 8, marginTop: 1 },
   bulletText: { color: '#fff', fontSize: 14, opacity: 0.85, flex: 1, lineHeight: 20 },
+  mechanicBtn: { backgroundColor: '#0f3460', borderWidth: 1, borderColor: '#00d4ff', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 4, marginBottom: 10 },
+  mechanicTxt: { color: '#00d4ff', fontSize: 16, fontWeight: 'bold' },
   emergencyBtn: { backgroundColor: '#e74c3c', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 4 },
   emergencyTxt: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   errorText: { color: '#fff', textAlign: 'center', fontSize: 16, paddingHorizontal: 32 },
