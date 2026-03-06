@@ -156,7 +156,8 @@ export default function DTCDetailScreen({ route, navigation }) {
             year: selectedVehicle?.year ?? null,
           })}
         >
-          <Text style={S.mechanicTxt}>🔧 Find a Mechanic Near Me</Text>
+          <Text style={S.mechanicLabel}>FIND A MECHANIC</Text>
+          <Text style={S.mechanicSub}>Nearby auto repair shops</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={S.emergencyBtn}>
@@ -200,8 +201,15 @@ const S = StyleSheet.create({
   bulletRow: { flexDirection: 'row', marginBottom: 6 },
   bullet: { color: '#00d4ff', fontSize: 14, marginRight: 8, marginTop: 1 },
   bulletText: { color: '#fff', fontSize: 14, opacity: 0.85, flex: 1, lineHeight: 20 },
-  mechanicBtn: { backgroundColor: '#0f3460', borderWidth: 1, borderColor: '#00d4ff', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 4, marginBottom: 10 },
-  mechanicTxt: { color: '#00d4ff', fontSize: 16, fontWeight: 'bold' },
+  mechanicBtn: {
+    backgroundColor: 'rgba(0,212,255,0.08)',
+    borderWidth: 1, borderColor: 'rgba(0,212,255,0.4)',
+    padding: 16, borderRadius: 8,
+    alignItems: 'center', marginTop: 4, marginBottom: 10,
+    shadowColor: '#00d4ff', shadowOpacity: 0.15, shadowRadius: 8,
+  },
+  mechanicLabel: { color: '#00d4ff', fontSize: 13, fontWeight: '800', letterSpacing: 2.5 },
+  mechanicSub: { color: 'rgba(0,212,255,0.55)', fontSize: 12, marginTop: 3 },
   emergencyBtn: { backgroundColor: '#e74c3c', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 4 },
   emergencyTxt: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   errorText: { color: '#fff', textAlign: 'center', fontSize: 16, paddingHorizontal: 32 },

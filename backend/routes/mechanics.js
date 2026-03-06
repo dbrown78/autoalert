@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// GET /api/mechanics/nearby?lat=&lng=&radius=
+// GET /api/mechanics?lat=&lng=&radius=
 // Proxies Google Places Nearby Search so the API key stays server-side.
-router.get('/nearby', async (req, res) => {
+router.get('/', async (req, res) => {
   const { lat, lng, radius = 8000 } = req.query;
 
   if (!lat || !lng) {
@@ -52,8 +52,14 @@ router.get('/nearby', async (req, res) => {
 
     const data = await response.json();
 
+    const EXCLUDED_KEYWORDS = [
+      'autozone', "o'reilly", 'advance auto', 'car wash', 'supply',
+      'wholesale', 'inspection', 'mvc', 'nissan', 'honda', 'toyota',
+      'ford', 'chevy', 'bmw', 'mercedes',
+    ];
+
     // Normalize to a flat shape the frontend can use directly
-    const shops = (data.places || []).map(p => ({
+    const all = (data.places || []).map(p => ({
       id: p.id,
       name: p.displayName?.text ?? 'Unknown',
       address: p.formattedAddress ?? '',
@@ -64,6 +70,17 @@ router.get('/nearby', async (req, res) => {
       lng: p.location?.longitude ?? null,
       openNow: p.regularOpeningHours?.openNow ?? null,
     }));
+
+    // Remove dealerships, parts stores, car washes, etc.
+    const filtered = all.filter(s => {
+      const lower = s.name.toLowerCase();
+      return !EXCLUDED_KEYWORDS.some(kw => lower.includes(kw));
+    });
+
+    // Prioritize established shops (rating >= 4.0, ratingCount >= 50)
+    const preferred = filtered.filter(s => s.rating >= 4.0 && s.ratingCount >= 50);
+    const rest      = filtered.filter(s => !(s.rating >= 4.0 && s.ratingCount >= 50));
+    const shops     = [...preferred, ...rest].slice(0, 8);
 
     res.json({ shops });
   } catch (err) {
