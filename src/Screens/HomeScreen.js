@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import ForesightCard from '../components/ForesightCard';
 
 const DTC_CODES = {
   'P0420': { short: 'Catalytic Converter Efficiency Low', severity: 'Medium', urgency: 'Within 2 weeks' },
@@ -30,6 +31,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
       <Text style={S.welcome}>Welcome back, {user?.name} 👋</Text>
+      <ForesightCard />
       <Text style={S.heading}>Active Alerts ({codes.length})</Text>
       <ScrollView style={S.scroll}>
         {codes.map(c => (

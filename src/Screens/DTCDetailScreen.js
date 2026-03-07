@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native';
 import client from '../api/client';
 import CostComparisonCard from '../components/CostComparisonCard';
 import DIYRepairCard from '../components/DIYRepairCard';
@@ -35,6 +35,18 @@ export default function DTCDetailScreen({ route, navigation }) {
           dtc_code: code,
           vehicle_id: selectedVehicle?.id ?? null,
         }).catch(() => {}); // fire-and-forget, silent on failure
+
+        // ODIN Foresight: log telemetry snapshot alongside the scan event.
+        // Discrete sensor fields (rpm, coolant_temp, etc.) are null until live
+        // OBD hardware is integrated; raw_data captures DTC context for now.
+        client.post('/telemetry', {
+          vehicle_id: selectedVehicle?.id ?? null,
+          raw_data: {
+            dtc_code: code,
+            severity: res.data.dtc.severity,
+            urgency: res.data.dtc.urgency,
+          },
+        }).catch(() => {});
       })
       .catch(() => setError('Could not load details for ' + code))
       .finally(() => setLoading(false));
@@ -127,15 +139,26 @@ export default function DTCDetailScreen({ route, navigation }) {
         )}
 
         {detail.oem_cost_min != null && (
-          <CostComparisonCard
-            oemCostMin={detail.oem_cost_min}
-            oemCostMax={detail.oem_cost_max}
-            aftermarketCostMin={detail.aftermarket_cost_min}
-            aftermarketCostMax={detail.aftermarket_cost_max}
-            laborHoursMin={detail.labor_hours_min}
-            laborHoursMax={detail.labor_hours_max}
-            diyDifficulty={detail.diy_difficulty}
-          />
+          <>
+            <CostComparisonCard
+              oemCostMin={detail.oem_cost_min}
+              oemCostMax={detail.oem_cost_max}
+              aftermarketCostMin={detail.aftermarket_cost_min}
+              aftermarketCostMax={detail.aftermarket_cost_max}
+              laborHoursMin={detail.labor_hours_min}
+              laborHoursMax={detail.labor_hours_max}
+              diyDifficulty={detail.diy_difficulty}
+            />
+            <TouchableOpacity
+              style={S.amazonBtn}
+              onPress={() => {
+                const q = encodeURIComponent(`${detail.code} ${detail.short_description} parts`);
+                Linking.openURL(`https://www.amazon.com/s?k=${q}&tag=odinai-20`);
+              }}
+            >
+              <Text style={S.amazonTxt}>Find Parts on Amazon →</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         <DIYRepairCard
@@ -210,6 +233,8 @@ const S = StyleSheet.create({
   },
   mechanicLabel: { color: '#00d4ff', fontSize: 13, fontWeight: '800', letterSpacing: 2.5 },
   mechanicSub: { color: 'rgba(0,212,255,0.55)', fontSize: 12, marginTop: 3 },
+  amazonBtn: { backgroundColor: '#00d4ff', padding: 14, borderRadius: 10, alignItems: 'center', marginTop: -2, marginBottom: 10 },
+  amazonTxt: { color: '#1a1a2e', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
   emergencyBtn: { backgroundColor: '#e74c3c', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 4 },
   emergencyTxt: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   errorText: { color: '#fff', textAlign: 'center', fontSize: 16, paddingHorizontal: 32 },

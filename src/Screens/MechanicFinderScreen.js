@@ -76,6 +76,52 @@ function OpenBadge({ openNow }) {
   );
 }
 
+function TrustBadge({ shopId }) {
+  const [trust, setTrust] = useState(null);   // null = loading
+  const [done, setDone]   = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    client.get(`/mechanics/${shopId}/trust`)
+      .then(res => { if (!cancelled) { setTrust(res.data.trust); setDone(true); } })
+      .catch(() => { if (!cancelled) setDone(true); });
+    return () => { cancelled = true; };
+  }, [shopId]);
+
+  if (!done) {
+    // Reserve space while loading — avoids layout jump
+    return (
+      <View style={ST.trustRow}>
+        <Text style={ST.trustLabel}>ODIN</Text>
+        <Text style={ST.trustLoading}>—</Text>
+      </View>
+    );
+  }
+
+  if (!trust || trust.score == null) {
+    return (
+      <View style={ST.trustRow}>
+        <Text style={ST.trustLabel}>ODIN</Text>
+        <Text style={ST.trustNoData}>No data yet</Text>
+      </View>
+    );
+  }
+
+  const bg     = trust.tier_color + '1f'; // ~12% opacity
+  const border = trust.tier_color + '59'; // ~35% opacity
+
+  return (
+    <View style={ST.trustRow}>
+      <Text style={ST.trustLabel}>ODIN</Text>
+      <View style={[ST.trustPill, { backgroundColor: bg, borderColor: border }]}>
+        <Text style={[ST.trustPillTxt, { color: trust.tier_color }]}>
+          {trust.tier.toUpperCase()} · {trust.score}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 function MechanicCard({ shop, userLat, userLng }) {
   const dist = haversineDistance(userLat, userLng, shop.lat, shop.lng);
   const distLabel = dist != null ? `${dist.toFixed(1)} mi` : null;
@@ -92,11 +138,14 @@ function MechanicCard({ shop, userLat, userLng }) {
         )}
       </View>
 
-      {/* ── Rating + badge ── */}
+      {/* ── Rating + open badge ── */}
       <View style={ST.metaRow}>
         <StarRow rating={shop.rating} count={shop.ratingCount} />
         <OpenBadge openNow={shop.openNow} />
       </View>
+
+      {/* ── ODIN Trust Score ── */}
+      <TrustBadge shopId={shop.id} />
 
       {/* ── Address ── */}
       {shop.address ? (
@@ -332,6 +381,25 @@ const ST = StyleSheet.create({
   badgeOpen:   { backgroundColor: C.openBg },
   badgeClosed: { backgroundColor: C.closedBg },
   badgeTxt:    { fontSize: 10, fontWeight: '800', letterSpacing: 1 },
+
+  // Trust score row
+  trustRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginBottom: 8, marginTop: 2,
+  },
+  trustLabel: {
+    color: 'rgba(0,212,255,0.4)', fontSize: 9, fontWeight: '800',
+    letterSpacing: 1.5, textTransform: 'uppercase',
+  },
+  trustPill: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 4, borderWidth: 1,
+  },
+  trustPillTxt: {
+    fontSize: 10, fontWeight: '800', letterSpacing: 0.8,
+  },
+  trustLoading: { color: C.textMuted, fontSize: 12 },
+  trustNoData:  { color: C.textMuted, fontSize: 11, fontStyle: 'italic' },
 
   address:     { color: C.textSecondary, fontSize: 12, lineHeight: 17, marginBottom: 12 },
 

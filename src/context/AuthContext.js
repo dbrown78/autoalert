@@ -89,6 +89,8 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
+      console.log('[login] URL:', client.defaults.baseURL + '/auth/login');
+      console.log('[login] body:', { email, password });
       const res = await client.post('/auth/login', { email, password });
       setAuth(res.data.token);
       setUser(res.data.user);
@@ -96,6 +98,9 @@ export const AuthProvider = ({ children }) => {
       await storage.setItem('token', res.data.token);
       await loadSelectedVehicle();
     } catch (err) {
+      console.log('[login] error status:', err.response?.status);
+      console.log('[login] error data:', err.response?.data);
+      console.log('[login] error message:', err.message);
       setError(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);

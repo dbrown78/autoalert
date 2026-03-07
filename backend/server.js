@@ -11,6 +11,8 @@ app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/dtc', require('./routes/dtc'));
 app.use('/api/mechanics', require('./routes/mechanics'));
 app.use('/api/scans', require('./routes/scans'));
+app.use('/api/telemetry', require('./routes/telemetry'));
+app.use('/api/foresight', require('./routes/foresight'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

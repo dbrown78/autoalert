@@ -16,7 +16,10 @@ export default function LoginScreen({ navigation }) {
         value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address"/>
       <TextInput style={S.input} placeholder="Password" placeholderTextColor="rgba(255,255,255,0.3)"
         value={password} onChangeText={setPassword} secureTextEntry/>
-      <TouchableOpacity style={[S.btn, loading && {opacity:0.6}]} onPress={() => login(email, password)} disabled={loading}>
+      <TouchableOpacity style={[S.btn, loading && {opacity:0.6}]} onPress={() => {
+          console.log('[LoginScreen] onPress triggered', { email, password });
+          login(email, password);
+        }} disabled={loading}>
         {loading ? <ActivityIndicator color="#1a1a2e"/> : <Text style={S.btnTxt}>Log In</Text>}
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>

@@ -12,13 +12,19 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.mhlabs201.odin",
+      "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "AutoAlert needs your location to find nearby mechanics."
+        "NSLocationWhenInUseUsageDescription": "AutoAlert needs your location to find nearby mechanics.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "permissions": ["android.permission.ACCESS_FINE_LOCATION"],
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -32,6 +38,11 @@
     "plugins": [
       "expo-secure-store",
       "expo-location"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8b97a057-0daf-4d69-85ea-7e1844300b42"
+      }
+    }
   }
 }
