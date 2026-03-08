@@ -9,9 +9,12 @@ const steps = [
   'migrate_drive_safety',
   'seed_dtc_vehicle_overrides',
   'migrate_telemetry',
+  'migrate_telemetry_extended',
   'migrate_foresight',
   'migrate_shop_trust',
   'seed_benchmarks',
+  'migrate_push_tokens',
+  'migrate_foresight_training',
 ];
 
 for (const step of steps) {

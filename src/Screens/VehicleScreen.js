@@ -26,7 +26,7 @@ export default function VehicleScreen({ navigation }) {
   const fetchVehicles = async () => {
     try {
       const res = await client.get('/vehicles', { headers });
-      setVehicles(res.data.vehicles);
+      setVehicles(res.data.vehicles ?? []);
     } catch (err) {
       setError('Failed to load vehicles');
     } finally {
@@ -123,25 +123,25 @@ export default function VehicleScreen({ navigation }) {
 }
 
 const S = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a1a2e' },
+  container: { flex: 1, backgroundColor: '#080808' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 52, paddingHorizontal: 20, paddingBottom: 12 },
   backBtn: { width: 60 },
-  backTxt: { color: '#00d4ff', fontSize: 16 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  addBtn: { color: '#00d4ff', fontSize: 16, fontWeight: 'bold', width: 60, textAlign: 'right' },
-  error: { color: '#e74c3c', textAlign: 'center', marginHorizontal: 20, marginBottom: 8 },
-  form: { backgroundColor: '#16213e', margin: 20, borderRadius: 14, padding: 16 },
-  input: { backgroundColor: '#0f3460', borderRadius: 10, padding: 12, color: '#fff', fontSize: 14, marginBottom: 10 },
-  saveBtn: { backgroundColor: '#00d4ff', padding: 14, borderRadius: 30, alignItems: 'center', marginTop: 4 },
-  saveBtnTxt: { color: '#1a1a2e', fontSize: 15, fontWeight: 'bold' },
+  backTxt: { color: '#C0C0C0', fontSize: 16 },
+  headerTitle: { color: '#E0E0E0', fontSize: 13, fontWeight: 'bold', letterSpacing: 2, textTransform: 'uppercase' },
+  addBtn: { color: '#C0C0C0', fontSize: 13, letterSpacing: 1, width: 60, textAlign: 'right' },
+  error: { color: '#D0453A', textAlign: 'center', marginHorizontal: 20, marginBottom: 8, fontSize: 12, letterSpacing: 1 },
+  form: { backgroundColor: '#1A1A1A', margin: 20, borderRadius: 0, padding: 16, borderWidth: 1, borderColor: '#2A2A2A' },
+  input: { backgroundColor: '#0A0A0A', borderRadius: 0, padding: 12, color: '#C0C0C0', fontSize: 14, marginBottom: 10, borderWidth: 1, borderColor: '#2A2A2A' },
+  saveBtn: { backgroundColor: 'transparent', padding: 14, borderRadius: 0, alignItems: 'center', marginTop: 4, borderWidth: 1, borderColor: '#C0C0C0' },
+  saveBtnTxt: { color: '#C0C0C0', fontSize: 11, fontWeight: 'bold', letterSpacing: 3, textTransform: 'uppercase' },
   scroll: { flex: 1, paddingHorizontal: 20 },
   emptyState: { alignItems: 'center', marginTop: 80 },
   emptyIcon: { fontSize: 48, marginBottom: 12 },
-  emptyText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  emptySubText: { color: '#fff', opacity: 0.5, fontSize: 14, marginTop: 6 },
-  card: { backgroundColor: '#16213e', borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center' },
-  vehicleName: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  vehicleSub: { color: '#fff', opacity: 0.6, fontSize: 13, marginTop: 3 },
-  deleteBtn: { backgroundColor: 'rgba(231,76,60,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  deleteTxt: { color: '#e74c3c', fontSize: 13, fontWeight: 'bold' },
+  emptyText: { color: '#E0E0E0', fontSize: 16, fontWeight: 'bold', letterSpacing: 1 },
+  emptySubText: { color: '#777777', fontSize: 13, marginTop: 6 },
+  card: { backgroundColor: '#1A1A1A', borderRadius: 0, padding: 16, marginBottom: 8, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#2A2A2A' },
+  vehicleName: { color: '#E0E0E0', fontSize: 15, fontWeight: 'bold', letterSpacing: 0.5 },
+  vehicleSub: { color: '#777777', fontSize: 13, marginTop: 3 },
+  deleteBtn: { backgroundColor: 'transparent', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 0, borderWidth: 1, borderColor: '#D0453A' },
+  deleteTxt: { color: '#D0453A', fontSize: 12, fontWeight: 'bold', letterSpacing: 1 },
 });

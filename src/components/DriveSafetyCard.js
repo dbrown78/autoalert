@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet } from 'react-native';
 
 const CONFIG = {
-  yes:     { icon: '✅', label: 'Safe to Drive',      bg: '#1a4a2e', border: '#27ae60', text: '#27ae60' },
-  caution: { icon: '⚠️',  label: 'Drive with Caution', bg: '#4a3800', border: '#f39c12', text: '#f39c12' },
-  no:      { icon: '🚫', label: 'Do Not Drive',       bg: '#4a1a1a', border: '#e74c3c', text: '#e74c3c' },
+  yes:     { icon: '✅', label: 'Safe to Drive',      bg: 'rgba(76,175,130,0.08)',  border: '#4CAF82', text: '#4CAF82' },
+  caution: { icon: '⚠️',  label: 'Drive with Caution', bg: 'rgba(192,139,48,0.08)', border: '#C08B30', text: '#C08B30' },
+  no:      { icon: '🚫', label: 'Do Not Drive',       bg: 'rgba(208,69,58,0.08)',   border: '#D0453A', text: '#D0453A' },
 };
 
 export default function DriveSafetyCard({ driveSafety, driveSafetyReason }) {
@@ -25,10 +25,10 @@ export default function DriveSafetyCard({ driveSafety, driveSafetyReason }) {
 
 const S = StyleSheet.create({
   card: {
-    borderWidth: 1.5,
-    borderRadius: 12,
+    borderWidth: 1,
+    borderRadius: 0,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   header: {
     flexDirection: 'row',
@@ -36,7 +36,7 @@ const S = StyleSheet.create({
     gap: 10,
     marginBottom: 8,
   },
-  icon: { fontSize: 22 },
-  label: { fontSize: 18, fontWeight: 'bold' },
-  reason: { color: '#fff', opacity: 0.85, fontSize: 14, lineHeight: 20 },
+  icon: { fontSize: 20 },
+  label: { fontSize: 15, fontWeight: 'bold', letterSpacing: 1 },
+  reason: { color: '#E0E0E0', opacity: 0.75, fontSize: 13, lineHeight: 20 },
 });

@@ -3,8 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native'
 const YT_BASE = 'https://www.youtube.com/results?search_query=';
 
 const BADGE = {
-  easy:     { label: 'You can likely fix this yourself', bg: '#1a4a2e', text: '#27ae60', border: '#27ae60' },
-  moderate: { label: 'Experienced DIYers can handle this', bg: '#4a3800', text: '#f39c12', border: '#f39c12' },
+  easy:     { label: 'You can likely fix this yourself',    bg: 'rgba(76,175,130,0.08)',  text: '#4CAF82', border: '#4CAF82' },
+  moderate: { label: 'Experienced DIYers can handle this', bg: 'rgba(192,139,48,0.08)', text: '#C08B30', border: '#C08B30' },
 };
 
 function ytUrl(query) {
@@ -63,64 +63,69 @@ export default function DIYRepairCard({ dtcCode, shortDescription, make, model, 
 
 const S = StyleSheet.create({
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 14,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 0,
     padding: 16,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   titleRow: {
     marginBottom: 12,
     gap: 8,
   },
   title: {
-    color: '#fff',
-    fontSize: 15,
+    color: '#E0E0E0',
+    fontSize: 13,
     fontWeight: 'bold',
     marginBottom: 6,
+    letterSpacing: 0.5,
   },
   badge: {
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 0,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  badgeTxt: { fontSize: 12, fontWeight: '600' },
+  badgeTxt: { fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
   linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: '#0f1f3d',
+    borderRadius: 0,
+    backgroundColor: '#141414',
     marginBottom: 8,
     gap: 10,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   linkRowPrimary: {
-    backgroundColor: '#1a0000',
+    backgroundColor: 'rgba(208,69,58,0.06)',
     borderWidth: 1,
-    borderColor: '#ff3c3c',
+    borderColor: 'rgba(208,69,58,0.35)',
   },
   playIcon: {
-    color: '#aaa',
+    color: '#505050',
     fontSize: 13,
   },
   playIconPrimary: {
-    color: '#ff3c3c',
-    fontSize: 15,
+    color: '#D0453A',
+    fontSize: 14,
   },
   linkLabel: {
     flex: 1,
-    color: '#ccc',
+    color: '#777777',
     fontSize: 13,
     lineHeight: 18,
   },
   linkLabelPrimary: {
-    color: '#fff',
+    color: '#E0E0E0',
     fontWeight: '600',
   },
   arrow: {
-    color: '#555',
+    color: '#2A2A2A',
     fontSize: 18,
   },
 });

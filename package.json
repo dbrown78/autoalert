@@ -9,11 +9,15 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/rajdhani": "^0.4.1",
+    "@expo-google-fonts/share-tech-mono": "^0.4.1",
     "@expo/metro-runtime": "~55.0.6",
+    "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/native": "^7.1.31",
     "@react-navigation/native-stack": "^7.14.2",
     "axios": "^1.13.6",
     "expo": "^55.0.4",
+    "expo-font": "~55.0.4",
     "expo-location": "~55.1.2",
     "expo-secure-store": "~55.0.8",
     "expo-status-bar": "~55.0.4",

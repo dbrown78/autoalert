@@ -5,9 +5,9 @@ import { useAuth } from '../context/AuthContext';
 
 // Severity config — low=blue per ODIN spec
 const SEVERITY = {
-  high:   { color: '#e74c3c', bg: 'rgba(231,76,60,0.10)',   border: 'rgba(231,76,60,0.35)',   label: 'HIGH' },
-  medium: { color: '#f39c12', bg: 'rgba(243,156,18,0.10)',  border: 'rgba(243,156,18,0.35)',  label: 'MED' },
-  low:    { color: '#3b82f6', bg: 'rgba(59,130,246,0.10)',  border: 'rgba(59,130,246,0.35)',  label: 'LOW' },
+  high:   { color: '#D0453A', bg: 'rgba(208,69,58,0.10)',   border: 'rgba(208,69,58,0.35)',   label: 'HIGH' },
+  medium: { color: '#C08B30', bg: 'rgba(192,139,48,0.10)',  border: 'rgba(192,139,48,0.35)',  label: 'MED' },
+  low:    { color: '#4CAF82', bg: 'rgba(76,175,130,0.10)',  border: 'rgba(76,175,130,0.35)',  label: 'LOW' },
 };
 
 const SENSOR_LABELS = {
@@ -140,12 +140,12 @@ export default function ForesightCard() {
 
 const S = StyleSheet.create({
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 14,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 0,
     marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(0,212,255,0.15)',
+    borderColor: '#2A2A2A',
   },
 
   // Header
@@ -156,7 +156,7 @@ const S = StyleSheet.create({
     paddingTop: 13,
     paddingBottom: 11,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: '#2A2A2A',
   },
   headerLeft: {
     flex: 1,
@@ -167,23 +167,22 @@ const S = StyleSheet.create({
   odinDot: {
     width: 7,
     height: 7,
-    borderRadius: 4,
-    backgroundColor: '#00d4ff',
-    // Simulated pulse via opacity — no animation needed for static render
+    borderRadius: 0,
+    backgroundColor: '#C0C0C0',
     opacity: 0.9,
   },
   title: {
-    color: '#00d4ff',
+    color: '#C0C0C0',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
   countBadge: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#D0453A',
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
@@ -197,7 +196,7 @@ const S = StyleSheet.create({
     padding: 4,
   },
   refreshText: {
-    color: 'rgba(0,212,255,0.5)',
+    color: 'rgba(192,192,192,0.5)',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -210,25 +209,25 @@ const S = StyleSheet.create({
     gap: 8,
   },
   stateSubtext: {
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(224,224,224,0.45)',
     fontSize: 12,
     marginTop: 6,
   },
   errorText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: '#777777',
     fontSize: 13,
   },
   retryBtn: {
     marginTop: 4,
     paddingHorizontal: 18,
     paddingVertical: 7,
-    backgroundColor: 'rgba(0,212,255,0.12)',
-    borderRadius: 20,
+    backgroundColor: 'rgba(192,192,192,0.08)',
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: 'rgba(0,212,255,0.3)',
+    borderColor: 'rgba(192,192,192,0.3)',
   },
   retryText: {
-    color: '#00d4ff',
+    color: '#C0C0C0',
     fontSize: 12,
     fontWeight: '700',
   },
@@ -248,15 +247,15 @@ const S = StyleSheet.create({
   emptyDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 0,
   },
   emptyTitle: {
-    color: '#27ae60',
+    color: '#4CAF82',
     fontSize: 14,
     fontWeight: '700',
   },
   emptySubtext: {
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(224,224,224,0.45)',
     fontSize: 12,
     textAlign: 'center',
     marginTop: 2,
@@ -265,11 +264,11 @@ const S = StyleSheet.create({
   // Alert rows
   alertRow: {
     flexDirection: 'row',
-    minHeight: 44,       // WCAG touch target minimum
+    minHeight: 44,
   },
   alertRowDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: '#2A2A2A',
   },
   severityBar: {
     width: 3,
@@ -288,7 +287,7 @@ const S = StyleSheet.create({
   sensorPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 0,
     borderWidth: 1,
   },
   sensorText: {
@@ -300,7 +299,7 @@ const S = StyleSheet.create({
   severityPill: {
     paddingHorizontal: 6,
     paddingVertical: 3,
-    borderRadius: 4,
+    borderRadius: 0,
   },
   severityPillText: {
     fontSize: 9,
@@ -308,20 +307,20 @@ const S = StyleSheet.create({
     letterSpacing: 1,
   },
   alertLabel: {
-    color: '#ffffff',
+    color: '#E0E0E0',
     fontSize: 13,
     fontWeight: '600',
     lineHeight: 18,
   },
   alertDetail: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(224,224,224,0.5)',
     fontSize: 11,
     lineHeight: 16,
   },
 
   // Footer
   brandLine: {
-    color: 'rgba(0,212,255,0.2)',
+    color: 'rgba(192,192,192,0.2)',
     fontSize: 9,
     fontWeight: '600',
     letterSpacing: 1.5,
@@ -329,6 +328,6 @@ const S = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 7,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.04)',
+    borderTopColor: '#2A2A2A',
   },
 });

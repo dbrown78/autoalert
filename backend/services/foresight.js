@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const { preprocessSensors }    = require('./sensorPreprocessor');
+const { sendForesightAlert }    = require('./pushNotifications');
 
 // ---------------------------------------------------------------------------
 // Thresholds
@@ -107,13 +109,14 @@ async function analyzeVehicle(userId, vehicleId) {
 
   if (logs.length === 0) return [];
 
+  const preprocessed = preprocessSensors(logs);
   const triggered = [];
 
   for (const rule of Object.values(RULES)) {
-    const values = logs
-      .map(r => r[rule.sensor])
-      .filter(v => v !== null && v !== undefined)
-      .map(Number);
+    const { clean: values, warnings } = preprocessed[rule.sensor] ?? { clean: [], warnings: [] };
+    if (warnings.length > 0) {
+      console.log(`[foresight] ${rule.sensor} preprocessing: ${warnings.join(' | ')}`);
+    }
 
     if (values.length < rule.minSamples) continue;
 
@@ -131,6 +134,8 @@ async function analyzeVehicle(userId, vehicleId) {
 
     // Upsert: if an unresolved alert for this sensor already exists, update it;
     // otherwise insert a new one.
+    // (xmax = 0) is true only for a fresh INSERT — used to gate push notifications
+    // so we notify once when the alert is first raised, not on every analysis run.
     const { rows } = await pool.query(
       `INSERT INTO foresight_alerts
          (user_id, vehicle_id, sensor, label, severity, detail, reading, resolved)
@@ -141,10 +146,19 @@ async function analyzeVehicle(userId, vehicleId) {
          detail     = EXCLUDED.detail,
          reading    = EXCLUDED.reading,
          updated_at = NOW()
-       RETURNING *`,
+       RETURNING *, (xmax = 0) AS is_new`,
       [userId, vehicleId, rule.sensor, rule.label, rule.severity, result.detail, result.reading]
     );
-    triggered.push(rows[0]);
+
+    const alert = rows[0];
+    triggered.push(alert);
+
+    // Send push notification only when the alert is first created
+    if (alert.is_new) {
+      sendForesightAlert(userId, alert).catch(err =>
+        console.error(`[foresight] push notification failed for alert ${alert.id}:`, err)
+      );
+    }
   }
 
   return triggered;

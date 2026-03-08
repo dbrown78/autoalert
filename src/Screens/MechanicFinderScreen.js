@@ -8,21 +8,21 @@ import client from '../api/client';
 
 // ─── Palette (Cyberpunk HUD) ────────────────────────────────────────────────
 const C = {
-  bg:          '#0a0e1a',
-  surface:     '#0f1929',
-  surfaceAlt:  '#111f35',
-  border:      'rgba(0,212,255,0.18)',
-  borderGlow:  'rgba(0,212,255,0.45)',
-  accent:      '#00d4ff',
-  accentDim:   'rgba(0,212,255,0.12)',
-  open:        '#00e676',
-  openBg:      'rgba(0,230,118,0.12)',
-  closed:      '#ff3d3d',
-  closedBg:    'rgba(255,61,61,0.12)',
-  gold:        '#ffc107',
-  textPrimary: '#ffffff',
-  textSecondary: 'rgba(255,255,255,0.5)',
-  textMuted:   'rgba(255,255,255,0.3)',
+  bg:          '#080808',
+  surface:     '#1A1A1A',
+  surfaceAlt:  '#141414',
+  border:      '#2A2A2A',
+  borderGlow:  '#3A3A3A',
+  accent:      '#C0C0C0',
+  accentDim:   'rgba(192,192,192,0.08)',
+  open:        '#4CAF82',
+  openBg:      'rgba(76,175,130,0.12)',
+  closed:      '#D0453A',
+  closedBg:    'rgba(208,69,58,0.12)',
+  gold:        '#C08B30',
+  textPrimary: '#E0E0E0',
+  textSecondary: '#777777',
+  textMuted:   '#505050',
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -319,7 +319,6 @@ const ST = StyleSheet.create({
   neonRule: {
     height: 1, backgroundColor: C.border,
     marginHorizontal: 20,
-    shadowColor: C.accent, shadowOpacity: 0.6, shadowRadius: 4,
   },
 
   // States
@@ -328,7 +327,7 @@ const ST = StyleSheet.create({
   errorTxt:     { color: C.closed, textAlign: 'center', fontSize: 14, lineHeight: 22, marginBottom: 20 },
   retryBtn: {
     borderWidth: 1, borderColor: C.accent, paddingHorizontal: 28,
-    paddingVertical: 12, borderRadius: 4,
+    paddingVertical: 12, borderRadius: 0,
   },
   retryTxt:     { color: C.accent, fontWeight: '700', fontSize: 13, letterSpacing: 1.5 },
   emptyIcon:    { fontSize: 40, color: C.textMuted, marginBottom: 16 },
@@ -346,7 +345,7 @@ const ST = StyleSheet.create({
   contextBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.border,
-    borderRadius: 6, paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 0, paddingHorizontal: 14, paddingVertical: 10,
     marginBottom: 16,
   },
   contextCode:    { color: C.accent, fontWeight: '800', fontSize: 14, letterSpacing: 1 },
@@ -356,17 +355,15 @@ const ST = StyleSheet.create({
   card: {
     backgroundColor: C.surface,
     borderWidth: 1, borderColor: C.border,
-    borderRadius: 8, padding: 16,
+    borderRadius: 0, padding: 16,
     marginBottom: 10,
-    shadowColor: C.accent, shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
   },
   cardHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
   shopName:    { color: C.textPrimary, fontSize: 15, fontWeight: '700', flex: 1, marginRight: 10, lineHeight: 21 },
 
   distPill: {
     backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.border,
-    borderRadius: 4, paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: 0, paddingHorizontal: 8, paddingVertical: 3,
   },
   distTxt: { color: C.accent, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
 
@@ -377,7 +374,7 @@ const ST = StyleSheet.create({
   ratingCount: { color: C.textSecondary, fontSize: 12 },
   noRating:    { color: C.textMuted, fontSize: 12 },
 
-  badge:       { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  badge:       { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 0 },
   badgeOpen:   { backgroundColor: C.openBg },
   badgeClosed: { backgroundColor: C.closedBg },
   badgeTxt:    { fontSize: 10, fontWeight: '800', letterSpacing: 1 },
@@ -388,12 +385,12 @@ const ST = StyleSheet.create({
     marginBottom: 8, marginTop: 2,
   },
   trustLabel: {
-    color: 'rgba(0,212,255,0.4)', fontSize: 9, fontWeight: '800',
+    color: '#505050', fontSize: 9, fontWeight: '800',
     letterSpacing: 1.5, textTransform: 'uppercase',
   },
   trustPill: {
     paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 4, borderWidth: 1,
+    borderRadius: 0, borderWidth: 1,
   },
   trustPillTxt: {
     fontSize: 10, fontWeight: '800', letterSpacing: 0.8,
@@ -407,12 +404,12 @@ const ST = StyleSheet.create({
   actions:  { flexDirection: 'row', gap: 8, marginTop: 4 },
   actionBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 10, paddingHorizontal: 14, borderRadius: 4, minHeight: 44,
+    paddingVertical: 10, paddingHorizontal: 14, borderRadius: 0, minHeight: 44,
   },
   callBtn:  { flex: 1, backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.border },
   callIcon: { color: C.accent, fontSize: 14, marginRight: 6 },
   callTxt:  { color: C.accent, fontSize: 13, fontWeight: '600' },
-  dirBtn:   { paddingHorizontal: 16, backgroundColor: '#0f2340', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  dirBtn:   { paddingHorizontal: 16, backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.border },
   dirTxt:   { color: C.textSecondary, fontSize: 13, fontWeight: '600' },
   noPhone:  { color: C.textMuted, fontSize: 12, alignSelf: 'center' },
 

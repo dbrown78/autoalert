@@ -19,17 +19,17 @@ function buildPartsURL(scan) {
 
 // ─── Theme ───────────────────────────────────────────────────────────────────
 const C = {
-  bg:            '#1a1a2e',
-  surface:       '#16213e',
-  border:        'rgba(0,212,255,0.12)',
-  accent:        '#00d4ff',
-  accentDim:     'rgba(0,212,255,0.08)',
-  textPrimary:   '#ffffff',
-  textSecondary: 'rgba(255,255,255,0.55)',
-  textMuted:     'rgba(255,255,255,0.28)',
-  sevHigh:       '#e74c3c',
-  sevMed:        '#f39c12',
-  sevLow:        '#27ae60',
+  bg:            '#080808',
+  surface:       '#1A1A1A',
+  border:        '#2A2A2A',
+  accent:        '#C0C0C0',
+  accentDim:     'rgba(192,192,192,0.08)',
+  textPrimary:   '#E0E0E0',
+  textSecondary: '#777777',
+  textMuted:     '#505050',
+  sevHigh:       '#D0453A',
+  sevMed:        '#C08B30',
+  sevLow:        '#4CAF82',
 };
 
 const SEV_COLOR = { high: C.sevHigh, medium: C.sevMed, low: C.sevLow };
@@ -130,7 +130,7 @@ const RI = StyleSheet.create({
   arm:      { position: 'absolute', backgroundColor: C.accent },
   armH:     { height: 2, width: 14, top: 0, left: 0 },
   armV:     { width: 2, height: 14, top: 0, left: 0 },
-  dot:      { width: 6, height: 6, borderRadius: 3, backgroundColor: C.accent },
+  dot:      { width: 6, height: 6, borderRadius: 0, backgroundColor: C.accent },
   scanLine: { position: 'absolute', height: 1, width: 40, backgroundColor: C.accent, opacity: 0.4 },
 });
 
@@ -215,7 +215,7 @@ export default function ScanHistoryScreen({ navigation }) {
     setError(null);
     try {
       const res = await client.get('/scans');
-      setScans(res.data.scans);
+      setScans(res.data.scans ?? []);
     } catch {
       setError('Could not load scan history.');
     } finally {
@@ -340,7 +340,7 @@ const S = StyleSheet.create({
   errorTxt:   { color: C.textSecondary, textAlign: 'center', fontSize: 14, lineHeight: 22, marginBottom: 20 },
   retryBtn: {
     borderWidth: 1, borderColor: C.accent,
-    paddingHorizontal: 28, paddingVertical: 11, borderRadius: 6,
+    paddingHorizontal: 28, paddingVertical: 11, borderRadius: 0,
   },
   retryTxt: { color: C.accent, fontWeight: '700', fontSize: 13 },
 
@@ -355,7 +355,7 @@ const S = StyleSheet.create({
   },
   emptyAction: {
     backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.border,
-    paddingHorizontal: 24, paddingVertical: 11, borderRadius: 6,
+    paddingHorizontal: 24, paddingVertical: 11, borderRadius: 0,
   },
   emptyActionTxt: { color: C.accent, fontSize: 13, fontWeight: '700' },
 
@@ -377,7 +377,7 @@ const S = StyleSheet.create({
   // Card
   card: {
     backgroundColor: C.surface,
-    borderRadius: 10,
+    borderRadius: 0,
     marginBottom: 8,
     flexDirection: 'row',
     overflow: 'hidden',
@@ -401,7 +401,7 @@ const S = StyleSheet.create({
 
   sevBadge: {
     paddingHorizontal: 7, paddingVertical: 2,
-    borderRadius: 4, borderWidth: 1,
+    borderRadius: 0, borderWidth: 1,
   },
   sevTxt: { fontSize: 9, fontWeight: '800', letterSpacing: 0.8 },
 
@@ -410,7 +410,7 @@ const S = StyleSheet.create({
   vehicleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   vehiclePill: {
     backgroundColor: 'rgba(255,255,255,0.06)',
-    paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3,
+    paddingHorizontal: 5, paddingVertical: 1, borderRadius: 0,
   },
   vehiclePillTxt: { color: C.textMuted, fontSize: 9, fontWeight: '800', letterSpacing: 0.6 },
   vehicleTxt:     { color: C.textSecondary, fontSize: 11 },
@@ -422,11 +422,11 @@ const S = StyleSheet.create({
   time: { color: C.textMuted, fontSize: 11 },
 
   partsBtn: {
-    backgroundColor: 'rgba(0,212,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(0,212,255,0.22)',
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4,
+    backgroundColor: C.accentDim,
+    borderWidth: 1, borderColor: C.border,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 0,
   },
-  partsBtnPressed: { backgroundColor: 'rgba(0,212,255,0.18)' },
+  partsBtnPressed: { backgroundColor: 'rgba(192,192,192,0.15)' },
   partsBtnTxt: { color: C.accent, fontSize: 10, fontWeight: '700', letterSpacing: 0.4 },
 
   // Delete button (absolutely positioned)
@@ -434,13 +434,13 @@ const S = StyleSheet.create({
     position: 'absolute', right: 0, top: 0, bottom: 0,
     width: 44, alignItems: 'center', justifyContent: 'center',
   },
-  deleteBtnPressed: { backgroundColor: 'rgba(231,76,60,0.08)' },
+  deleteBtnPressed: { backgroundColor: 'rgba(208,69,58,0.08)' },
   deleteX:   { width: 12, height: 12, alignItems: 'center', justifyContent: 'center' },
   deleteArm: {
     position: 'absolute',
     width: 12, height: 1.5,
     backgroundColor: 'rgba(255,255,255,0.28)',
-    borderRadius: 1,
+    borderRadius: 0,
   },
 
   pressed: { opacity: 0.65 },

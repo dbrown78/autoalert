@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-const DIY_COLORS = { easy: '#27ae60', moderate: '#f39c12', hard: '#e74c3c' };
+const DIY_COLORS = { easy: '#4CAF82', moderate: '#C08B30', hard: '#D0453A' };
 const DIY_LABELS = { easy: '🔧 Easy DIY', moderate: '⚙️ Moderate DIY', hard: '🔩 Hard DIY' };
 
 const fmt = n => '$' + Number(n).toLocaleString();
@@ -52,16 +52,20 @@ export default function CostComparisonCard({
 
 const S = StyleSheet.create({
   card: {
-    backgroundColor: '#16213e',
-    borderRadius: 14,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 0,
     padding: 16,
     marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   title: {
-    color: '#00d4ff',
-    fontSize: 15,
+    color: '#C0C0C0',
+    fontSize: 10,
     fontWeight: 'bold',
     marginBottom: 14,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
   },
   columns: {
     flexDirection: 'row',
@@ -71,48 +75,52 @@ const S = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   oemCol: {
-    backgroundColor: 'rgba(243,156,18,0.12)',
+    backgroundColor: 'rgba(192,139,48,0.08)',
   },
   amCol: {
-    backgroundColor: 'rgba(39,174,96,0.12)',
+    backgroundColor: 'rgba(76,175,130,0.08)',
   },
   colDivider: {
-    width: 10,
+    width: 8,
   },
   colLabel: {
-    fontSize: 11,
-    color: '#fff',
-    opacity: 0.6,
+    fontSize: 10,
+    color: '#777777',
     marginBottom: 6,
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   oemPrice: {
-    color: '#f39c12',
+    color: '#C08B30',
     fontSize: 18,
     fontWeight: 'bold',
   },
   amPrice: {
-    color: '#27ae60',
+    color: '#4CAF82',
     fontSize: 18,
     fontWeight: 'bold',
   },
   savingsRow: {
-    backgroundColor: 'rgba(39,174,96,0.15)',
-    borderRadius: 8,
+    backgroundColor: 'rgba(76,175,130,0.08)',
+    borderRadius: 0,
     paddingVertical: 8,
     paddingHorizontal: 12,
     marginBottom: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(76,175,130,0.25)',
   },
   savingsText: {
-    color: '#27ae60',
-    fontSize: 13,
+    color: '#4CAF82',
+    fontSize: 12,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   footer: {
     flexDirection: 'row',
@@ -124,19 +132,18 @@ const S = StyleSheet.create({
     gap: 2,
   },
   footerLabel: {
-    color: '#fff',
-    opacity: 0.5,
+    color: '#777777',
     fontSize: 11,
   },
   footerValue: {
-    color: '#fff',
+    color: '#E0E0E0',
     fontSize: 14,
     fontWeight: '600',
   },
   diyBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 0,
   },
   diyText: {
     color: '#fff',

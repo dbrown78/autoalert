@@ -41,7 +41,8 @@ export const AuthProvider = ({ children }) => {
   const loadSelectedVehicle = async () => {
     try {
       const res = await client.get('/vehicles');
-      if (res.data.vehicles.length > 0) setSelectedVehicle(res.data.vehicles[0]);
+      const list = res.data?.vehicles ?? [];
+      if (list.length > 0) setSelectedVehicle(list[0]);
     } catch {
       // Non-fatal — DTC screen works without a vehicle
     }

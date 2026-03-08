@@ -6,8 +6,8 @@ import DIYRepairCard from '../components/DIYRepairCard';
 import DriveSafetyCard from '../components/DriveSafetyCard';
 import { useAuth } from '../context/AuthContext';
 
-const SEVERITY_COLORS = { high: '#e74c3c', medium: '#f39c12', low: '#27ae60' };
-const URGENCY_COLORS = { 'Check gas cap first': '#27ae60', 'Within 1 month': '#27ae60', 'Within 2 weeks': '#f39c12', 'Within 1 week': '#e74c3c' };
+const SEVERITY_COLORS = { high: '#D0453A', medium: '#C08B30', low: '#4CAF82' };
+const URGENCY_COLORS = { 'Check gas cap first': '#4CAF82', 'Within 1 month': '#4CAF82', 'Within 2 weeks': '#C08B30', 'Within 1 week': '#D0453A' };
 
 const capitalize = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
@@ -115,7 +115,7 @@ export default function DTCDetailScreen({ route, navigation }) {
         </Section>
 
         <Section title="Symptoms you may notice">
-          {detail.symptoms.map((s, i) => (
+          {(detail.symptoms ?? []).map((s, i) => (
             <View key={i} style={S.bulletRow}>
               <Text style={S.bullet}>•</Text>
               <Text style={S.bulletText}>{s}</Text>
@@ -124,7 +124,7 @@ export default function DTCDetailScreen({ route, navigation }) {
         </Section>
 
         <Section title="Common causes">
-          {detail.possible_causes.map((c, i) => (
+          {(detail.possible_causes ?? []).map((c, i) => (
             <View key={i} style={S.bulletRow}>
               <Text style={S.bullet}>•</Text>
               <Text style={S.bulletText}>{c}</Text>
@@ -203,39 +203,38 @@ function Section({ title, children }) {
 }
 
 const S = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#1a1a2e' },
+  container: { flex: 1, backgroundColor: '#080808' },
   center: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 52, paddingHorizontal: 20, paddingBottom: 12 },
   backBtn: { width: 60 },
-  backTxt: { color: '#00d4ff', fontSize: 16 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  backTxt: { color: '#C0C0C0', fontSize: 16 },
+  headerTitle: { color: '#E0E0E0', fontSize: 13, fontWeight: 'bold', letterSpacing: 2, textTransform: 'uppercase' },
   scroll: { flex: 1, paddingHorizontal: 20 },
-  heroCard: { backgroundColor: '#16213e', borderRadius: 16, padding: 20, marginBottom: 16, alignItems: 'center' },
-  codeLabel: { color: '#00d4ff', fontSize: 32, fontWeight: 'bold', letterSpacing: 2 },
-  codeShort: { color: '#fff', fontSize: 15, opacity: 0.85, textAlign: 'center', marginTop: 6, marginBottom: 14 },
+  heroCard: { backgroundColor: '#1A1A1A', borderRadius: 0, padding: 20, marginBottom: 14, alignItems: 'center', borderWidth: 1, borderColor: '#2A2A2A' },
+  codeLabel: { color: '#E0E0E0', fontSize: 32, fontWeight: 'bold', letterSpacing: 4 },
+  codeShort: { color: '#777777', fontSize: 13, textAlign: 'center', marginTop: 6, marginBottom: 14, letterSpacing: 0.5 },
   badgeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
-  badge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
-  badgeTxt: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-  vehicleBadge: { marginTop: 10, backgroundColor: 'rgba(0,212,255,0.15)', borderWidth: 1, borderColor: '#00d4ff', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  vehicleBadgeTxt: { color: '#00d4ff', fontSize: 12, fontWeight: '600' },
-  section: { backgroundColor: '#16213e', borderRadius: 14, padding: 16, marginBottom: 14 },
-  sectionTitle: { color: '#00d4ff', fontSize: 15, fontWeight: 'bold', marginBottom: 12 },
-  bodyText: { color: '#fff', fontSize: 14, lineHeight: 22, opacity: 0.85 },
+  badge: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 0, borderWidth: 1 },
+  badgeTxt: { color: '#fff', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5 },
+  vehicleBadge: { marginTop: 10, borderWidth: 1, borderColor: '#2A2A2A', borderRadius: 0, paddingHorizontal: 14, paddingVertical: 6 },
+  vehicleBadgeTxt: { color: '#777777', fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
+  section: { backgroundColor: '#1A1A1A', borderRadius: 0, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#2A2A2A' },
+  sectionTitle: { color: '#C0C0C0', fontSize: 10, fontWeight: 'bold', marginBottom: 12, letterSpacing: 3, textTransform: 'uppercase' },
+  bodyText: { color: '#E0E0E0', fontSize: 14, lineHeight: 22, opacity: 0.85 },
   bulletRow: { flexDirection: 'row', marginBottom: 6 },
-  bullet: { color: '#00d4ff', fontSize: 14, marginRight: 8, marginTop: 1 },
-  bulletText: { color: '#fff', fontSize: 14, opacity: 0.85, flex: 1, lineHeight: 20 },
+  bullet: { color: '#505050', fontSize: 14, marginRight: 8, marginTop: 1 },
+  bulletText: { color: '#E0E0E0', fontSize: 14, opacity: 0.85, flex: 1, lineHeight: 20 },
   mechanicBtn: {
-    backgroundColor: 'rgba(0,212,255,0.08)',
-    borderWidth: 1, borderColor: 'rgba(0,212,255,0.4)',
-    padding: 16, borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: '#C0C0C0',
+    padding: 16, borderRadius: 0,
     alignItems: 'center', marginTop: 4, marginBottom: 10,
-    shadowColor: '#00d4ff', shadowOpacity: 0.15, shadowRadius: 8,
   },
-  mechanicLabel: { color: '#00d4ff', fontSize: 13, fontWeight: '800', letterSpacing: 2.5 },
-  mechanicSub: { color: 'rgba(0,212,255,0.55)', fontSize: 12, marginTop: 3 },
-  amazonBtn: { backgroundColor: '#00d4ff', padding: 14, borderRadius: 10, alignItems: 'center', marginTop: -2, marginBottom: 10 },
-  amazonTxt: { color: '#1a1a2e', fontSize: 14, fontWeight: '800', letterSpacing: 0.5 },
-  emergencyBtn: { backgroundColor: '#e74c3c', padding: 16, borderRadius: 30, alignItems: 'center', marginTop: 4 },
-  emergencyTxt: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  errorText: { color: '#fff', textAlign: 'center', fontSize: 16, paddingHorizontal: 32 },
+  mechanicLabel: { color: '#E0E0E0', fontSize: 11, fontWeight: '800', letterSpacing: 3 },
+  mechanicSub: { color: '#777777', fontSize: 11, marginTop: 3, letterSpacing: 0.5 },
+  amazonBtn: { backgroundColor: '#1A1A1A', padding: 14, borderRadius: 0, alignItems: 'center', marginTop: -2, marginBottom: 10, borderWidth: 1, borderColor: '#2A2A2A' },
+  amazonTxt: { color: '#E0E0E0', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
+  emergencyBtn: { backgroundColor: 'transparent', padding: 16, borderRadius: 0, alignItems: 'center', marginTop: 4, borderWidth: 1, borderColor: '#D0453A' },
+  emergencyTxt: { color: '#D0453A', fontSize: 12, fontWeight: 'bold', letterSpacing: 3, textTransform: 'uppercase' },
+  errorText: { color: '#E0E0E0', textAlign: 'center', fontSize: 16, paddingHorizontal: 32 },
 });
