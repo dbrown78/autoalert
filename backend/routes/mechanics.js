@@ -1,19 +1,8 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { calculateTrustScore } = require('../services/trustScore');
+const authenticateToken = require('../middleware/auth');
 const router = express.Router();
-
-const authenticateToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'No token' });
-  try {
-    req.userId = jwt.verify(token, process.env.JWT_SECRET).id;
-    next();
-  } catch {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
 
 // GET /api/mechanics?lat=&lng=&radius=
 // Proxies Google Places Nearby Search so the API key stays server-side.
@@ -69,7 +58,7 @@ router.get('/', async (req, res) => {
     const EXCLUDED_KEYWORDS = [
       'autozone', "o'reilly", 'advance auto', 'car wash', 'supply',
       'wholesale', 'inspection', 'mvc', 'nissan', 'honda', 'toyota',
-      'ford', 'chevy', 'bmw', 'mercedes',
+      'ford', 'chevy', 'bmw', 'mercedes', 'porsche',
     ];
 
     // Normalize to a flat shape the frontend can use directly

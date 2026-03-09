@@ -5,6 +5,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import client from '../api/client';
+import SubmitOutcomeModal from '../components/SubmitOutcomeModal';
+import TrustBreakdownModal from '../components/TrustBreakdownModal';
 
 // ─── Palette (Cyberpunk HUD) ────────────────────────────────────────────────
 const C = {
@@ -76,20 +78,24 @@ function OpenBadge({ openNow }) {
   );
 }
 
-function TrustBadge({ shopId }) {
-  const [trust, setTrust] = useState(null);   // null = loading
-  const [done, setDone]   = useState(false);
+// Task 3a — TrustBadge: pressable pill, breakdown modal, external trust support
+function TrustBadge({ shopId, externalTrust }) {
+  const [fetchedTrust, setFetchedTrust] = useState(null);
+  const [done, setDone]                 = useState(false);
+  const [breakdownVisible, setBreakdownVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     client.get(`/mechanics/${shopId}/trust`)
-      .then(res => { if (!cancelled) { setTrust(res.data.trust); setDone(true); } })
+      .then(res => { if (!cancelled) { setFetchedTrust(res.data.trust); setDone(true); } })
       .catch(() => { if (!cancelled) setDone(true); });
     return () => { cancelled = true; };
   }, [shopId]);
 
-  if (!done) {
-    // Reserve space while loading — avoids layout jump
+  // externalTrust (from a fresh submission) takes priority over the fetched value
+  const trust = externalTrust ?? fetchedTrust;
+
+  if (!done && !externalTrust) {
     return (
       <View style={ST.trustRow}>
         <Text style={ST.trustLabel}>ODIN</Text>
@@ -100,31 +106,63 @@ function TrustBadge({ shopId }) {
 
   if (!trust || trust.score == null) {
     return (
-      <View style={ST.trustRow}>
-        <Text style={ST.trustLabel}>ODIN</Text>
-        <Text style={ST.trustNoData}>No data yet</Text>
-      </View>
+      <>
+        <Pressable
+          style={ST.trustRow}
+          onPress={() => setBreakdownVisible(true)}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+        >
+          <Text style={ST.trustLabel}>ODIN</Text>
+          <Text style={ST.trustNoData}>No data yet</Text>
+        </Pressable>
+        <TrustBreakdownModal
+          visible={breakdownVisible}
+          onClose={() => setBreakdownVisible(false)}
+          trust={null}
+        />
+      </>
     );
   }
 
-  const bg     = trust.tier_color + '1f'; // ~12% opacity
-  const border = trust.tier_color + '59'; // ~35% opacity
+  const bg     = trust.tier_color + '1f';
+  const border = trust.tier_color + '59';
 
   return (
-    <View style={ST.trustRow}>
-      <Text style={ST.trustLabel}>ODIN</Text>
-      <View style={[ST.trustPill, { backgroundColor: bg, borderColor: border }]}>
-        <Text style={[ST.trustPillTxt, { color: trust.tier_color }]}>
-          {trust.tier.toUpperCase()} · {trust.score}
-        </Text>
-      </View>
-    </View>
+    <>
+      <Pressable
+        style={ST.trustRow}
+        onPress={() => setBreakdownVisible(true)}
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+      >
+        <Text style={ST.trustLabel}>ODIN</Text>
+        <View style={[ST.trustPill, { backgroundColor: bg, borderColor: border }]}>
+          <Text style={[ST.trustPillTxt, { color: trust.tier_color }]}>
+            {trust.tier.toUpperCase()} · {trust.score}
+          </Text>
+        </View>
+      </Pressable>
+
+      <TrustBreakdownModal
+        visible={breakdownVisible}
+        onClose={() => setBreakdownVisible(false)}
+        trust={trust}
+      />
+    </>
   );
 }
 
-function MechanicCard({ shop, userLat, userLng }) {
+// Task 3b — MechanicCard: Report Outcome button + SubmitOutcomeModal
+function MechanicCard({ shop, userLat, userLng, dtcCode, onTrustUpdate }) {
   const dist = haversineDistance(userLat, userLng, shop.lat, shop.lng);
   const distLabel = dist != null ? `${dist.toFixed(1)} mi` : null;
+  const [outcomeModalVisible, setOutcomeModalVisible] = useState(false);
+  const [externalTrust, setExternalTrust]             = useState(null);
+
+  function handleSubmitted(trust) {
+    setExternalTrust(trust);
+    setOutcomeModalVisible(false);
+    if (onTrustUpdate) onTrustUpdate(shop.id, trust);
+  }
 
   return (
     <View style={ST.card}>
@@ -144,8 +182,8 @@ function MechanicCard({ shop, userLat, userLng }) {
         <OpenBadge openNow={shop.openNow} />
       </View>
 
-      {/* ── ODIN Trust Score ── */}
-      <TrustBadge shopId={shop.id} />
+      {/* ── ODIN Trust Score (Task 4: externalTrust passed in) ── */}
+      <TrustBadge shopId={shop.id} externalTrust={externalTrust} />
 
       {/* ── Address ── */}
       {shop.address ? (
@@ -177,6 +215,23 @@ function MechanicCard({ shop, userLat, userLng }) {
           </Pressable>
         ) : null}
       </View>
+
+      {/* ── Report Outcome button (Task 3b) ── */}
+      <Pressable
+        style={({ pressed }) => [ST.reportBtn, pressed && ST.pressed]}
+        onPress={() => setOutcomeModalVisible(true)}
+      >
+        <Text style={ST.reportBtnTxt}>⊕  REPORT OUTCOME</Text>
+      </Pressable>
+
+      {/* ── Outcome modal ── */}
+      <SubmitOutcomeModal
+        visible={outcomeModalVisible}
+        onClose={() => setOutcomeModalVisible(false)}
+        onSubmitted={handleSubmitted}
+        shop={{ id: shop.id, name: shop.name }}
+        dtcCode={dtcCode ?? null}
+      />
     </View>
   );
 }
@@ -290,6 +345,8 @@ export default function MechanicFinderScreen({ route, navigation }) {
               shop={item}
               userLat={coords?.latitude}
               userLng={coords?.longitude}
+              dtcCode={dtcCode}
+              onTrustUpdate={() => {}}
             />
           )}
           ListHeaderComponent={ListHeader}
@@ -412,6 +469,22 @@ const ST = StyleSheet.create({
   dirBtn:   { paddingHorizontal: 16, backgroundColor: C.accentDim, borderWidth: 1, borderColor: C.border },
   dirTxt:   { color: C.textSecondary, fontSize: 13, fontWeight: '600' },
   noPhone:  { color: C.textMuted, fontSize: 12, alignSelf: 'center' },
+
+  // Report outcome button (Task 3c)
+  // NOTE: borderStyle:'dashed' omitted — on iOS it silently kills child rendering
+  reportBtn: {
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A2A',
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  reportBtnTxt: {
+    color: '#505050',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+  },
 
   pressed:  { opacity: 0.65 },
 });

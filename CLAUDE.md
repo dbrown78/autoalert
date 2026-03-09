@@ -4,15 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AutoAlert is a React Native (Expo) mobile app for tracking vehicle check engine codes (DTCs). It has a Node.js/Express backend with PostgreSQL for user auth and vehicle management.
+AutoAlert is a React Native (Expo) mobile app for tracking vehicle check engine codes (DTCs), OBD2 telemetry, and predictive maintenance. It has a Node.js/Express backend with PostgreSQL. The UI follows the **ODIN design system**: near-black backgrounds (`#080808`), silver (`#C0C0C0`) accents, uppercase tracking labels, square tab indicators.
 
 ## Commands
 
 ### Frontend (React Native / Expo)
 ```bash
-# Run from project root
 npx expo start          # Start dev server (choose platform interactively)
-npx expo start --ios    # iOS simulator
+npx expo start --ios
 npx expo start --android
 npx expo start --web
 ```
@@ -20,81 +19,68 @@ npx expo start --web
 ### Backend (Express API)
 ```bash
 cd backend
-node server.js          # Start backend server (port 3001)
-# No dev watcher configured — add nodemon manually if needed
+node server.js          # Start backend server (port 3001 or $PORT)
+node migrate_all.js     # Run all migrations + seeds in order (first-time setup)
 ```
 
-### Database seed
-```bash
-cd backend
-node seed_dtc.js   # creates dtc_codes table + inserts 20 OBD2 codes (idempotent)
-```
-
-### No test suite is configured yet.
+See `backend/CLAUDE.md` for full backend architecture, route map, services, and schema.
 
 ## Architecture
 
 ### Stack
-- **Frontend:** React Native + Expo (v55), React Navigation (native stack), Axios, expo-secure-store
-- **Backend:** Express v5, PostgreSQL (`pg`), JWT auth (`jsonwebtoken`), `bcryptjs`
-- **Database:** PostgreSQL, accessed via `pg` connection pool
+- **Frontend:** React Native + Expo (v55), React Navigation (native stack + bottom tabs), Axios, expo-secure-store
+- **Backend:** Express v5, PostgreSQL (`pg`), JWT auth — see `backend/CLAUDE.md`
 
 ### Frontend (`src/`)
+
+> **Important:** The screens directory is `src/Screens/` (capital S). App.js imports using lowercase `./src/screens/` — Metro resolves this on macOS (case-insensitive FS) but will break on Linux/CI.
 
 ```
 src/
 ├── api/client.js          # Axios instance; platform-aware base URL
 │                          #   Web: http://localhost:3001/api
-│                          #   Mobile: http://192.168.1.198:3001/api
+│                          #   Mobile: http://192.168.1.198:3001/api  ← update when network changes
 ├── context/AuthContext.js # Global auth state; JWT storage + /auth/me session restore
-└── screens/               # One file per screen
+├── Screens/               # One file per screen (capital S)
+└── components/            # Shared card components
 ```
-
-**Navigation flow (App.js):**
-- Unauthenticated: `LoginScreen` ↔ `RegisterScreen`
-- Authenticated: `HomeScreen` → `DTCDetailScreen`, `VehicleScreen`
 
 **Auth state** is held in `AuthContext` (user, token, loading, appReady). Tokens are stored in `expo-secure-store` on mobile and `localStorage` on web.
 
-### Backend (`backend/`)
+### Navigation (App.js)
 
-```
-backend/
-├── server.js              # Express entry point, mounts routes
-├── config/db.js           # pg Pool; reads DB_HOST/PORT/NAME/USER/PASSWORD from .env
-└── routes/
-    ├── auth.js            # POST /auth/register, POST /auth/login, GET /auth/me
-    └── vehicles.js        # CRUD for /vehicles (all protected by JWT middleware)
-```
+- **Unauthenticated stack:** `LoginScreen` ↔ `RegisterScreen`
+- **Authenticated:**
+  - Bottom tabs: `HomeScreen`, `OBD2ScanScreen`, `TelemetryScreen`, `ForesightScreen`
+  - Stack overlays (no tab bar): `DTCDetailScreen`, `MechanicFinderScreen`, `ScanHistoryScreen`
 
-**Auth middleware** validates `Authorization: Bearer <token>` on every protected route and attaches `req.user`.
+### Screens
 
-**DTC routes** (`/api/dtc`) are public (no auth required):
-- `GET /api/dtc` — all codes; `?severity=low|medium|high` to filter
-- `GET /api/dtc/:code` — single code (case-insensitive)
+| Screen | Description |
+|---|---|
+| `HomeScreen` | Active DTC alerts list; navigates to DTCDetail or MechanicFinder |
+| `OBD2ScanScreen` | Manual DTC code lookup; records scan to history |
+| `TelemetryScreen` | OBD2 live sensor readings display |
+| `ForesightScreen` | Predictive alerts from rule-based telemetry analysis |
+| `DTCDetailScreen` | Full DTC detail fetched from `/api/dtc/:code`; DIY repair links, cost estimate, drive safety |
+| `MechanicFinderScreen` | Nearby shop search via `/api/mechanics`; shows ODIN Trust Score |
+| `ScanHistoryScreen` | User's past scans from `/api/scans` |
 
-### Database Schema
+### Components (`src/components/`)
 
-```sql
--- users: id, name, email (unique), password (bcrypt)
--- vehicles: id, user_id (FK), year, make, model, trim, mileage, created_at
--- dtc_codes: code (PK), short_description, description, possible_causes TEXT[],
---            symptoms TEXT[], severity (low/medium/high), urgency, repairs JSONB
-```
-
-No migration tool is configured; schema is managed manually. Run `node seed_dtc.js` to create `dtc_codes` and seed 20 OBD2 codes.
-
-### DTC Data
-
-DTC code details live in the `dtc_codes` PostgreSQL table. `DTCDetailScreen` fetches `/api/dtc/:code` on mount; `HomeScreen` still uses a small hardcoded list for the active alerts card list (descriptions, severity, urgency) — this can be wired to `GET /api/dtc` in the future.
+| Component | Description |
+|---|---|
+| `DriveSafetyCard` | Red/amber/green "Is It Safe to Drive?" indicator |
+| `DIYRepairCard` | DIY repair steps + YouTube search links |
+| `CostComparisonCard` | Fair cost estimate vs. quoted price |
+| `ForesightCard` | Single foresight alert display |
 
 ## Environment
 
-Backend reads from `backend/.env` (not committed):
+Backend `.env` (not committed) — see `backend/CLAUDE.md` for full list. Key vars:
 ```
-DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
+DATABASE_URL (or DB_HOST/PORT/NAME/USER/PASSWORD)
 JWT_SECRET
-PORT (default 3001)
+GOOGLE_PLACES_API_KEY   # required for MechanicFinder
+PORT                    # default 3001
 ```
-
-The mobile client's API base URL is hardcoded to a local IP (`192.168.1.198`) in `src/api/client.js` — update this when the network changes.

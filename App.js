@@ -12,6 +12,7 @@ import ScanHistoryScreen from './src/screens/ScanHistoryScreen';
 import OBD2ScanScreen from './src/screens/OBD2ScanScreen';
 import TelemetryScreen from './src/screens/TelemetryScreen';
 import ForesightScreen from './src/screens/ForesightScreen';
+import VehicleScreen from './src/screens/VehicleScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -85,6 +86,7 @@ function AppNavigator() {
             <Stack.Screen name="DTCDetail"       component={DTCDetailScreen} />
             <Stack.Screen name="MechanicFinder"  component={MechanicFinderScreen} />
             <Stack.Screen name="ScanHistory"     component={ScanHistoryScreen} />
+            <Stack.Screen name="Vehicles"        component={VehicleScreen} />
           </>
         ) : (
           <>

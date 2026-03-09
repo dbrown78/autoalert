@@ -1,107 +1,153 @@
+'use strict';
+
 const pool = require('../config/db');
-const { preprocessSensors }    = require('./sensorPreprocessor');
-const { sendForesightAlert }    = require('./pushNotifications');
+const { preprocessSensors } = require('./sensorPreprocessor');
+const { sendForesightAlert } = require('./pushNotifications');
 
 // ---------------------------------------------------------------------------
-// Thresholds
+// Helper — rolling average of first N values (newest-first)
 // ---------------------------------------------------------------------------
-const RULES = {
-  // Coolant temp: normal operating range 85–105 °C.
-  // "Creep" = recent average trending above 108 °C.
-  coolant_temp: {
-    label: 'Coolant Temperature Creep',
+function avg(values, n) {
+  const slice = values.slice(0, n);
+  if (slice.length === 0) return null;
+  return slice.reduce((s, v) => s + v, 0) / slice.length;
+}
+
+// ---------------------------------------------------------------------------
+// Rule definitions
+// ---------------------------------------------------------------------------
+const RULES = [
+  // COOLANT SYSTEM
+  {
+    id: 'coolant_overheat_critical',
     sensor: 'coolant_temp',
+    sensor_label: 'Coolant Temperature',
+    system: 'coolant',
     severity: 'high',
-    minSamples: 5,
-    detect(values) {
-      const recent = values.slice(0, 10);
-      const avg = mean(recent);
-      if (avg > 108) {
-        return {
-          detail: `Average coolant temp over last ${recent.length} readings: ${avg.toFixed(1)} °C (threshold: 108 °C)`,
-          reading: avg,
-        };
-      }
-    },
+    rule_description: 'Coolant temperature critically high — engine at risk of overheating',
+    detect(values) { return values.slice(0, 10).some(v => v > 105); },
+  },
+  {
+    id: 'coolant_overheat_warning',
+    sensor: 'coolant_temp',
+    sensor_label: 'Coolant Temperature',
+    system: 'coolant',
+    severity: 'medium',
+    rule_description: 'Coolant running hotter than normal — monitor closely',
+    detect(values) { const a = avg(values, 10); return a !== null && a > 95; },
+  },
+  {
+    id: 'coolant_pressure_high',
+    sensor: 'coolant_pressure',
+    sensor_label: 'Coolant Pressure',
+    system: 'coolant',
+    severity: 'medium',
+    rule_description: 'Coolant pressure elevated — possible blockage or failing cap',
+    detect(values) { return values.some(v => v > 2.0); },
   },
 
-  // Voltage: healthy charging system 13.7–14.7 V at idle.
-  // "Drop" = recent average below 13.2 V (alternator strain / battery fade).
-  voltage: {
-    label: 'Charging System Voltage Drop',
+  // BATTERY / CHARGING
+  {
+    id: 'voltage_critical_low',
     sensor: 'voltage',
-    severity: 'medium',
-    minSamples: 3,
-    detect(values) {
-      const recent = values.slice(0, 8);
-      const avg = mean(recent);
-      if (avg < 13.2) {
-        return {
-          detail: `Average voltage over last ${recent.length} readings: ${avg.toFixed(2)} V (threshold: 13.2 V)`,
-          reading: avg,
-        };
-      }
-    },
+    sensor_label: 'Battery Voltage',
+    system: 'battery',
+    severity: 'high',
+    rule_description: 'Battery voltage critically low — possible charging system failure',
+    detect(values) { return values.some(v => v < 11.5); },
   },
-
-  // Fuel trim: short/long-term trim should sit within ±10 %.
-  // "Drift" = average magnitude exceeds 12 % (lean/rich condition developing).
-  fuel_trim: {
-    label: 'Fuel Trim Drift',
-    sensor: 'fuel_trim',
+  {
+    id: 'voltage_low',
+    sensor: 'voltage',
+    sensor_label: 'Battery Voltage',
+    system: 'battery',
     severity: 'medium',
-    minSamples: 5,
-    detect(values) {
-      const recent = values.slice(0, 10);
-      const avg = mean(recent.map(Math.abs));
-      if (avg > 12) {
-        const direction = mean(recent) > 0 ? 'lean' : 'rich';
-        return {
-          detail: `Average |fuel trim| over last ${recent.length} readings: ${avg.toFixed(1)} % — running ${direction} (threshold: ±12 %)`,
-          reading: avg,
-        };
-      }
-    },
+    rule_description: 'Battery voltage below optimal — check charging system',
+    detect(values) { const a = avg(values, values.length); return a !== null && a < 12.4; },
   },
-
-  // RPM: idle instability — standard deviation of idle-range RPM samples > 150.
-  // Only evaluated on samples plausibly at idle (< 1200 RPM).
-  rpm: {
-    label: 'RPM Instability at Idle',
-    sensor: 'rpm',
+  {
+    id: 'voltage_high',
+    sensor: 'voltage',
+    sensor_label: 'Battery Voltage',
+    system: 'battery',
     severity: 'low',
-    minSamples: 5,
-    detect(values) {
-      const idle = values.filter(v => v < 1200).slice(0, 20);
-      if (idle.length < 5) return;
-      const sd = stddev(idle);
-      if (sd > 150) {
-        return {
-          detail: `Idle RPM std deviation over ${idle.length} samples: ${sd.toFixed(0)} RPM (threshold: 150 RPM)`,
-          reading: sd,
-        };
-      }
-    },
+    rule_description: 'Battery voltage elevated — possible overcharging',
+    detect(values) { return values.some(v => v > 15.0); },
   },
-};
+
+  // OIL SYSTEM
+  {
+    id: 'oil_pressure_critical',
+    sensor: 'oil_pressure',
+    sensor_label: 'Oil Pressure',
+    system: 'oil',
+    severity: 'high',
+    rule_description: 'Oil pressure critically low — stop engine immediately',
+    detect(values) { return values.some(v => v < 0.5); },
+  },
+  {
+    id: 'oil_pressure_low',
+    sensor: 'oil_pressure',
+    sensor_label: 'Oil Pressure',
+    system: 'oil',
+    severity: 'medium',
+    rule_description: 'Oil pressure below normal range — check oil level',
+    detect(values) { const a = avg(values, values.length); return a !== null && a < 1.0; },
+  },
+
+  // GENERAL ENGINE
+  {
+    id: 'rpm_excessive',
+    sensor: 'rpm',
+    sensor_label: 'Engine RPM',
+    system: 'engine',
+    severity: 'medium',
+    rule_description: 'Engine running at high RPM consistently — check for issues',
+    detect(values) { const a = avg(values, 5); return a !== null && a > 4500; },
+  },
+  {
+    id: 'engine_load_high',
+    sensor: 'engine_load',
+    sensor_label: 'Engine Load',
+    system: 'engine',
+    severity: 'low',
+    rule_description: 'Engine load consistently high — may indicate strain',
+    detect(values) { const a = avg(values, values.length); return a !== null && a > 85; },
+  },
+  {
+    id: 'fuel_trim_rich',
+    sensor: 'fuel_trim',
+    sensor_label: 'Fuel Trim',
+    system: 'engine',
+    severity: 'low',
+    rule_description: 'Fuel trim running rich — possible sensor or injector issue',
+    detect(values) { const a = avg(values, values.length); return a !== null && a > 25; },
+  },
+  {
+    id: 'fuel_trim_lean',
+    sensor: 'fuel_trim',
+    sensor_label: 'Fuel Trim',
+    system: 'engine',
+    severity: 'low',
+    rule_description: 'Fuel trim running lean — possible vacuum leak or MAF issue',
+    detect(values) { const a = avg(values, values.length); return a !== null && a < -25; },
+  },
+];
+
+// Build rule_id → system map for getHealthScores
+const SYSTEM_BY_RULE = {};
+for (const rule of RULES) {
+  SYSTEM_BY_RULE[rule.id] = rule.system;
+}
 
 // ---------------------------------------------------------------------------
-// Core analysis
+// analyzeVehicle
 // ---------------------------------------------------------------------------
-
-/**
- * Analyze the last N telemetry rows for a vehicle and upsert foresight_alerts.
- * Returns the list of triggered alerts (new + existing active).
- */
 async function analyzeVehicle(userId, vehicleId) {
-  // Pull the 50 most recent rows that have at least one sensor populated.
+  // 1. Fetch last 50 telemetry rows, newest-first
   const { rows: logs } = await pool.query(
-    `SELECT coolant_temp, rpm, voltage, o2_sensor, fuel_trim, engine_load, intake_temp
-     FROM telemetry_logs
-     WHERE user_id = $1
-       AND vehicle_id = $2
-       AND (coolant_temp IS NOT NULL OR rpm IS NOT NULL OR voltage IS NOT NULL
-            OR fuel_trim IS NOT NULL OR engine_load IS NOT NULL)
+    `SELECT * FROM telemetry_logs
+     WHERE user_id = $1 AND vehicle_id = $2
      ORDER BY logged_at DESC
      LIMIT 50`,
     [userId, vehicleId]
@@ -109,71 +155,88 @@ async function analyzeVehicle(userId, vehicleId) {
 
   if (logs.length === 0) return [];
 
+  // 2. Preprocess all sensors
   const preprocessed = preprocessSensors(logs);
-  const triggered = [];
 
-  for (const rule of Object.values(RULES)) {
-    const { clean: values, warnings } = preprocessed[rule.sensor] ?? { clean: [], warnings: [] };
-    if (warnings.length > 0) {
-      console.log(`[foresight] ${rule.sensor} preprocessing: ${warnings.join(' | ')}`);
-    }
+  // 3 & 4 & 5. Evaluate each rule and upsert/resolve
+  for (const rule of RULES) {
+    const sensorData = preprocessed[rule.sensor];
+    const values = sensorData ? sensorData.clean : [];
+    const fires = values.length > 0 && rule.detect(values);
+    const reading = values[0] ?? null;
 
-    if (values.length < rule.minSamples) continue;
+    if (fires) {
+      // 4. UPSERT triggered alert
+      const { rows } = await pool.query(
+        `INSERT INTO foresight_alerts
+           (user_id, vehicle_id, rule_id, sensor, label, severity, detail, reading, resolved)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, FALSE)
+         ON CONFLICT (user_id, vehicle_id, rule_id) WHERE resolved = FALSE
+         DO UPDATE SET
+           severity   = EXCLUDED.severity,
+           detail     = EXCLUDED.detail,
+           reading    = EXCLUDED.reading,
+           updated_at = NOW(),
+           resolved   = FALSE
+         RETURNING *, (xmax = 0) AS is_new`,
+        [userId, vehicleId, rule.id, rule.sensor, rule.sensor_label,
+         rule.severity, rule.rule_description, reading]
+      );
 
-    const result = rule.detect(values);
-    if (!result) {
-      // Rule not triggered — resolve any existing open alert for this sensor.
+      const alert = rows[0];
+      if (alert.is_new) {
+        sendForesightAlert(userId, alert).catch(err =>
+          console.error(`[foresight] push notification failed for alert ${alert.id}:`, err)
+        );
+      }
+    } else {
+      // 5. Resolve if previously active
       await pool.query(
         `UPDATE foresight_alerts
          SET resolved = TRUE, resolved_at = NOW()
-         WHERE user_id = $1 AND vehicle_id = $2 AND sensor = $3 AND resolved = FALSE`,
-        [userId, vehicleId, rule.sensor]
-      );
-      continue;
-    }
-
-    // Upsert: if an unresolved alert for this sensor already exists, update it;
-    // otherwise insert a new one.
-    // (xmax = 0) is true only for a fresh INSERT — used to gate push notifications
-    // so we notify once when the alert is first raised, not on every analysis run.
-    const { rows } = await pool.query(
-      `INSERT INTO foresight_alerts
-         (user_id, vehicle_id, sensor, label, severity, detail, reading, resolved)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,FALSE)
-       ON CONFLICT (user_id, vehicle_id, sensor)
-         WHERE resolved = FALSE
-       DO UPDATE SET
-         detail     = EXCLUDED.detail,
-         reading    = EXCLUDED.reading,
-         updated_at = NOW()
-       RETURNING *, (xmax = 0) AS is_new`,
-      [userId, vehicleId, rule.sensor, rule.label, rule.severity, result.detail, result.reading]
-    );
-
-    const alert = rows[0];
-    triggered.push(alert);
-
-    // Send push notification only when the alert is first created
-    if (alert.is_new) {
-      sendForesightAlert(userId, alert).catch(err =>
-        console.error(`[foresight] push notification failed for alert ${alert.id}:`, err)
+         WHERE user_id = $1 AND vehicle_id = $2 AND rule_id = $3 AND resolved = FALSE`,
+        [userId, vehicleId, rule.id]
       );
     }
   }
 
-  return triggered;
+  // 6. Return all currently active alerts
+  const { rows: activeAlerts } = await pool.query(
+    `SELECT id, rule_id, sensor, label, severity, detail, reading, created_at, updated_at
+     FROM foresight_alerts
+     WHERE user_id = $1 AND vehicle_id = $2 AND resolved = FALSE
+     ORDER BY
+       CASE severity WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
+       updated_at DESC`,
+    [userId, vehicleId]
+  );
+
+  return activeAlerts;
 }
 
 // ---------------------------------------------------------------------------
-// Stats helpers
+// getHealthScores
 // ---------------------------------------------------------------------------
-function mean(arr) {
-  return arr.reduce((s, v) => s + v, 0) / arr.length;
+const SEVERITY_PENALTY = { high: 0.8, medium: 0.5, low: 0.25 };
+
+async function getHealthScores(userId, vehicleId) {
+  const { rows: alerts } = await pool.query(
+    `SELECT rule_id, severity FROM foresight_alerts
+     WHERE user_id = $1 AND vehicle_id = $2 AND resolved = FALSE`,
+    [userId, vehicleId]
+  );
+
+  const scores = { coolant: 1.0, battery: 1.0, oil: 1.0, brakes: 1.0 };
+
+  for (const alert of alerts) {
+    const system = SYSTEM_BY_RULE[alert.rule_id];
+    if (!system || !(system in scores)) continue;
+    const penalty = SEVERITY_PENALTY[alert.severity] ?? 0;
+    const score = 1.0 - penalty;
+    if (score < scores[system]) scores[system] = score;
+  }
+
+  return scores;
 }
 
-function stddev(arr) {
-  const m = mean(arr);
-  return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
-}
-
-module.exports = { analyzeVehicle };
+module.exports = { analyzeVehicle, getHealthScores };

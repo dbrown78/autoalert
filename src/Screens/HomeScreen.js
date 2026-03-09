@@ -22,6 +22,9 @@ export default function HomeScreen({ navigation }) {
       <View style={S.header}>
         <Text style={S.logo}>🚗 AutoAlert</Text>
         <View style={S.headerActions}>
+          <TouchableOpacity onPress={() => navigation.navigate('Vehicles')} style={S.historyBtn}>
+            <Text style={S.historyTxt}>Vehicles</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('ScanHistory')} style={S.historyBtn}>
             <Text style={S.historyTxt}>History</Text>
           </TouchableOpacity>
