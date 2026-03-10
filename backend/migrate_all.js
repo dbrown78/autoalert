@@ -15,6 +15,7 @@ const steps = [
   'seed_benchmarks',
   'migrate_push_tokens',
   'migrate_foresight_training',
+  'migrate_add_is_premium',
 ];
 
 for (const step of steps) {

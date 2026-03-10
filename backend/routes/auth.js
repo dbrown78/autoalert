@@ -16,7 +16,7 @@ router.post('/register', validateRegister, async (req, res) => {
 
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email',
+      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email, is_premium',
       [name.trim(), email.toLowerCase(), hash]
     );
     const user = result.rows[0];
@@ -41,7 +41,7 @@ router.post('/login', validateLogin, async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
+    res.json({ user: { id: user.id, name: user.name, email: user.email, is_premium: user.is_premium }, token });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error' });
@@ -51,7 +51,7 @@ router.post('/login', validateLogin, async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email FROM users WHERE id = $1',
+      'SELECT id, name, email, is_premium FROM users WHERE id = $1',
       [req.userId]
     );
     if (result.rows.length === 0)

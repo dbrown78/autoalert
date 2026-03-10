@@ -55,6 +55,13 @@ const authLimiter = rateLimit({
 app.use(globalLimiter);
 app.use('/api/auth', authLimiter);
 
+const sensorRoutes = require('./routes/sensors');
+const sensorBuffer = require('./sensorBuffer');
+const mockStream   = require('./mockOBD2Stream');
+
+// Start sensor buffer flush cycle
+sensorBuffer.start();
+
 // Routes
 app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/vehicles',  require('./routes/vehicles'));
@@ -64,6 +71,7 @@ app.use('/api/scans',     require('./routes/scans'));
 app.use('/api/telemetry', require('./routes/telemetry'));
 app.use('/api/foresight', require('./routes/foresight'));
 app.use('/api/push',      require('./routes/push'));
+app.use('/api/sensors',   sensorRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
@@ -74,4 +82,15 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Graceful shutdown
+async function shutdown(signal) {
+  console.log(`[server] ${signal} received — shutting down`);
+  mockStream.stopAll();
+  await sensorBuffer.stop();
+  server.close(() => process.exit(0));
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));

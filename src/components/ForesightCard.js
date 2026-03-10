@@ -3,44 +3,58 @@ import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'rea
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
-// Severity config — low=blue per ODIN spec
-const SEVERITY = {
-  high:   { color: '#D0453A', bg: 'rgba(208,69,58,0.10)',   border: 'rgba(208,69,58,0.35)',   label: 'HIGH' },
-  medium: { color: '#C08B30', bg: 'rgba(192,139,48,0.10)',  border: 'rgba(192,139,48,0.35)',  label: 'MED' },
-  low:    { color: '#4CAF82', bg: 'rgba(76,175,130,0.10)',  border: 'rgba(76,175,130,0.35)',  label: 'LOW' },
+// ---------------------------------------------------------------------------
+// Design tokens
+// ---------------------------------------------------------------------------
+
+const RISK_COLORS = {
+  low:      { color: '#4CAF82', label: 'LOW'  },
+  moderate: { color: '#C08B30', label: 'MOD'  },
+  high:     { color: '#D0453A', label: 'HIGH' },
+  critical: { color: '#D0453A', label: 'CRIT' },
 };
 
-const SENSOR_LABELS = {
-  coolant_temp: 'Coolant Temp',
-  voltage:      'Voltage',
-  fuel_trim:    'Fuel Trim',
-  rpm:          'Idle RPM',
+const URGENCY_CONFIG = {
+  ok:     { color: '#4CAF82', label: 'ALL CLEAR'    },
+  watch:  { color: '#C08B30', label: 'WATCH'        },
+  soon:   { color: '#D0453A', label: 'SERVICE SOON' },
+  urgent: { color: '#D0453A', label: 'URGENT'       },
 };
 
-export default function ForesightCard() {
-  const { selectedVehicle } = useAuth();
-  const [alerts, setAlerts]   = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState(false);
+// ---------------------------------------------------------------------------
+// ForesightCard
+// Props (all optional — falls back to AuthContext):
+//   vehicleId   number   — override selectedVehicle.id
+//   isPremium   boolean  — override user.is_premium
+// ---------------------------------------------------------------------------
+
+export default function ForesightCard({ vehicleId: vehicleIdProp, isPremium: isPremiumProp }) {
+  const { user, selectedVehicle } = useAuth();
+
+  const vehicleId = vehicleIdProp ?? selectedVehicle?.id;
+  const isPremium = isPremiumProp ?? user?.is_premium ?? false;
+
+  const [prediction, setPrediction] = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState(null);
 
   const load = useCallback(async () => {
-    if (!selectedVehicle?.id) return;
+    if (!vehicleId || !isPremium) return;
     setLoading(true);
-    setError(false);
+    setError(null);
     try {
-      const res = await client.get(`/foresight/${selectedVehicle.id}`);
-      setAlerts(res.data.alerts ?? []);
-    } catch {
-      setError(true);
+      const { data } = await client.get(`/foresight/${vehicleId}`);
+      setPrediction(data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not load prediction');
     } finally {
       setLoading(false);
     }
-  }, [selectedVehicle?.id]);
+  }, [vehicleId, isPremium]);
 
   useEffect(() => { load(); }, [load]);
 
-  // Don't render at all without a vehicle
-  if (!selectedVehicle) return null;
+  if (!vehicleId) return null;
 
   return (
     <View style={S.card}>
@@ -49,99 +63,145 @@ export default function ForesightCard() {
         <View style={S.headerLeft}>
           <View style={S.odinDot} />
           <Text style={S.title}>ODIN FORESIGHT</Text>
+          {isPremium && (
+            <View style={S.premiumBadge}>
+              <Text style={S.premiumText}>AI</Text>
+            </View>
+          )}
         </View>
-        {!loading && !error && alerts.length > 0 && (
-          <View style={S.countBadge}>
-            <Text style={S.countText}>{alerts.length}</Text>
-          </View>
-        )}
-        {!loading && !error && (
+        {isPremium && !loading && !error && (
           <TouchableOpacity onPress={load} style={S.refreshBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={S.refreshText}>↺</Text>
           </TouchableOpacity>
         )}
       </View>
 
+      {/* ── Non-premium: paywall ── */}
+      {!isPremium && (
+        <View style={S.paywall}>
+          <Text style={S.paywallLock}>🔒</Text>
+          <Text style={S.paywallTitle}>Predictive Intelligence</Text>
+          <Text style={S.paywallSub}>
+            AI-powered failure prediction before symptoms appear.
+          </Text>
+          <View style={S.upgradeBtn}>
+            <Text style={S.upgradeBtnText}>UPGRADE TO PREMIUM</Text>
+          </View>
+        </View>
+      )}
+
       {/* ── Loading ── */}
-      {loading && (
+      {isPremium && loading && (
         <View style={S.centerState}>
-          <ActivityIndicator size="small" color="#00d4ff" />
-          <Text style={S.stateSubtext}>Analyzing sensor trends…</Text>
+          <ActivityIndicator size="small" color="#C0C0C0" />
+          <Text style={S.stateSubtext}>Running predictive analysis…</Text>
         </View>
       )}
 
       {/* ── Error ── */}
-      {!loading && error && (
+      {isPremium && !loading && error && (
         <View style={S.centerState}>
-          <Text style={S.errorText}>Could not load predictive alerts</Text>
+          <Text style={S.errorText}>{error}</Text>
           <TouchableOpacity onPress={load} style={S.retryBtn}>
             <Text style={S.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* ── Empty state ── */}
-      {!loading && !error && alerts.length === 0 && (
-        <View style={S.emptyState}>
-          <View style={S.emptyDotRow}>
-            <View style={[S.emptyDot, { backgroundColor: '#27ae60' }]} />
-            <View style={[S.emptyDot, { backgroundColor: '#27ae60', opacity: 0.5 }]} />
-            <View style={[S.emptyDot, { backgroundColor: '#27ae60', opacity: 0.25 }]} />
-          </View>
-          <Text style={S.emptyTitle}>All sensors normal</Text>
-          <Text style={S.emptySubtext}>No predictive alerts detected for this vehicle</Text>
-        </View>
+      {/* ── ML Prediction result ── */}
+      {isPremium && !loading && !error && prediction && (
+        <>
+          {/* Overall risk */}
+          <OverallRisk prediction={prediction} />
+          {/* Per-system part scores */}
+          <PartScores partScores={prediction.part_scores} />
+          {/* Service estimate */}
+          <ServiceEstimate prediction={prediction} />
+        </>
       )}
 
-      {/* ── Alert rows ── */}
-      {!loading && !error && alerts.map((alert, i) => {
-        const sev = SEVERITY[alert.severity] ?? SEVERITY.low;
-        return (
-          <View
-            key={alert.id ?? i}
-            style={[
-              S.alertRow,
-              i < alerts.length - 1 && S.alertRowDivider,
-            ]}
-          >
-            {/* Left severity bar */}
-            <View style={[S.severityBar, { backgroundColor: sev.color }]} />
-
-            <View style={S.alertBody}>
-              {/* Top row: sensor pill + severity badge */}
-              <View style={S.alertTopRow}>
-                <View style={[S.sensorPill, { backgroundColor: sev.bg, borderColor: sev.border }]}>
-                  <Text style={[S.sensorText, { color: sev.color }]}>
-                    {SENSOR_LABELS[alert.sensor] ?? alert.sensor}
-                  </Text>
-                </View>
-                <View style={[S.severityPill, { backgroundColor: sev.bg }]}>
-                  <Text style={[S.severityPillText, { color: sev.color }]}>{sev.label}</Text>
-                </View>
-              </View>
-
-              {/* Alert label */}
-              <Text style={S.alertLabel}>{alert.label}</Text>
-
-              {/* Detail text */}
-              {alert.detail ? (
-                <Text style={S.alertDetail} numberOfLines={2}>{alert.detail}</Text>
-              ) : null}
-            </View>
-          </View>
-        );
-      })}
-
-      {/* ── Footer brand line ── */}
-      <Text style={S.brandLine}>Powered by ODIN predictive analysis</Text>
+      {/* ── Footer ── */}
+      <Text style={S.brandLine}>
+        {isPremium ? 'ODIN ML · LightGBM · Sensor analysis' : 'Premium feature'}
+      </Text>
     </View>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function OverallRisk({ prediction }) {
+  const pct        = Math.round((prediction.maintenance_probability ?? 0) * 100);
+  const urg        = URGENCY_CONFIG[prediction.maintenance_urgency] ?? URGENCY_CONFIG.ok;
+  const barColor   = urg.color;
+
+  return (
+    <View style={S.section}>
+      <View style={S.overallRow}>
+        <Text style={S.sectionLabel}>OVERALL RISK</Text>
+        <View style={[S.urgencyPill, { borderColor: barColor }]}>
+          <Text style={[S.urgencyText, { color: barColor }]}>{urg.label}</Text>
+        </View>
+      </View>
+      <View style={S.riskBarBg}>
+        <View style={[S.riskBarFill, { width: `${pct}%`, backgroundColor: barColor }]} />
+      </View>
+      <Text style={[S.pctLabel, { color: barColor }]}>{pct}%</Text>
+    </View>
+  );
+}
+
+function PartScores({ partScores }) {
+  if (!partScores) return null;
+
+  return (
+    <View style={S.partSection}>
+      {Object.entries(partScores).map(([system, data]) => {
+        const rc  = RISK_COLORS[data.risk_level] ?? RISK_COLORS.low;
+        const pct = Math.round((data.probability ?? 0) * 100);
+        return (
+          <View key={system} style={S.partRow}>
+            <Text style={S.partLabel}>{data.label}</Text>
+            <View style={[S.partBadge, { backgroundColor: rc.color + '22' }]}>
+              <Text style={[S.partBadgeText, { color: rc.color }]}>{rc.label}</Text>
+            </View>
+            <Text style={[S.partPct, { color: rc.color }]}>{pct}%</Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+function ServiceEstimate({ prediction }) {
+  const days = prediction.days_until_service;
+  const date = prediction.estimated_service_date;
+  if (!days || !date) return null;
+
+  const color = days <= 7 ? '#D0453A' : days <= 30 ? '#C08B30' : '#4CAF82';
+  const formatted = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric',
+  });
+
+  return (
+    <View style={[S.section, S.serviceRow]}>
+      <Text style={S.sectionLabel}>EST. SERVICE</Text>
+      <Text style={[S.serviceDate, { color }]}>
+        {formatted} · {days}d
+      </Text>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
+
 const S = StyleSheet.create({
   card: {
     backgroundColor: '#1A1A1A',
-    borderRadius: 0,
     marginBottom: 16,
     overflow: 'hidden',
     borderWidth: 1,
@@ -167,7 +227,6 @@ const S = StyleSheet.create({
   odinDot: {
     width: 7,
     height: 7,
-    borderRadius: 0,
     backgroundColor: '#C0C0C0',
     opacity: 0.9,
   },
@@ -178,145 +237,136 @@ const S = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
-  countBadge: {
-    backgroundColor: '#D0453A',
-    width: 20,
-    height: 20,
-    borderRadius: 0,
+  premiumBadge: {
+    backgroundColor: 'rgba(192,192,192,0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(192,192,192,0.3)',
+  },
+  premiumText: {
+    color: '#C0C0C0',
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  refreshBtn: { padding: 4 },
+  refreshText: { color: 'rgba(192,192,192,0.5)', fontSize: 16, fontWeight: 'bold' },
+
+  // Paywall
+  paywall: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    gap: 6,
   },
-  countText: {
-    color: '#fff',
+  paywallLock: { fontSize: 28, marginBottom: 4 },
+  paywallTitle: { color: '#E0E0E0', fontSize: 15, fontWeight: '700', letterSpacing: 0.5 },
+  paywallSub: {
+    color: 'rgba(224,224,224,0.45)',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 17,
+  },
+  upgradeBtn: {
+    marginTop: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#C0C0C0',
+  },
+  upgradeBtnText: {
+    color: '#C0C0C0',
     fontSize: 11,
-    fontWeight: 'bold',
-  },
-  refreshBtn: {
-    padding: 4,
-  },
-  refreshText: {
-    color: 'rgba(192,192,192,0.5)',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    letterSpacing: 2,
   },
 
-  // Center states (loading / error / empty)
+  // Center states
   centerState: {
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 16,
     gap: 8,
   },
-  stateSubtext: {
-    color: 'rgba(224,224,224,0.45)',
-    fontSize: 12,
-    marginTop: 6,
-  },
-  errorText: {
-    color: '#777777',
-    fontSize: 13,
-  },
+  stateSubtext: { color: 'rgba(224,224,224,0.45)', fontSize: 12, marginTop: 6 },
+  errorText: { color: '#777777', fontSize: 13 },
   retryBtn: {
     marginTop: 4,
     paddingHorizontal: 18,
     paddingVertical: 7,
-    backgroundColor: 'rgba(192,192,192,0.08)',
-    borderRadius: 0,
     borderWidth: 1,
     borderColor: 'rgba(192,192,192,0.3)',
   },
-  retryText: {
-    color: '#C0C0C0',
-    fontSize: 12,
-    fontWeight: '700',
-  },
+  retryText: { color: '#C0C0C0', fontSize: 12, fontWeight: '700' },
 
-  // Empty state
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    gap: 4,
-  },
-  emptyDotRow: {
-    flexDirection: 'row',
-    gap: 5,
-    marginBottom: 8,
-  },
-  emptyDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 0,
-  },
-  emptyTitle: {
-    color: '#4CAF82',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  emptySubtext: {
-    color: 'rgba(224,224,224,0.45)',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-
-  // Alert rows
-  alertRow: {
-    flexDirection: 'row',
-    minHeight: 44,
-  },
-  alertRowDivider: {
+  // Section wrapper
+  section: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#2A2A2A',
   },
-  severityBar: {
-    width: 3,
+  sectionLabel: {
+    color: '#505050',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  alertBody: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 11,
-    gap: 5,
-  },
-  alertTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  sensorPill: {
+
+  // Overall risk
+  overallRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  urgencyPill: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 0,
     borderWidth: 1,
   },
-  sensorText: {
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+  urgencyText: { fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
+  riskBarBg: {
+    height: 4,
+    backgroundColor: '#2A2A2A',
+    overflow: 'hidden',
   },
-  severityPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: 0,
-  },
-  severityPillText: {
-    fontSize: 9,
+  riskBarFill: { height: 4 },
+  pctLabel: {
+    marginTop: 6,
+    fontSize: 22,
     fontWeight: '800',
     letterSpacing: 1,
   },
-  alertLabel: {
-    color: '#E0E0E0',
-    fontSize: 13,
+
+  // Part scores
+  partSection: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A2A2A',
+  },
+  partRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: '#222222',
+  },
+  partLabel: {
+    flex: 1,
+    color: '#C0C0C0',
+    fontSize: 12,
     fontWeight: '600',
-    lineHeight: 18,
   },
-  alertDetail: {
-    color: 'rgba(224,224,224,0.5)',
-    fontSize: 11,
-    lineHeight: 16,
+  partBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    marginRight: 8,
   },
+  partBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 1 },
+  partPct: { fontSize: 13, fontWeight: '700', minWidth: 36, textAlign: 'right' },
+
+  // Service estimate
+  serviceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  serviceDate: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
 
   // Footer
   brandLine: {
