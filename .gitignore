@@ -40,3 +40,4 @@ yarn-error.*
 /ios
 /android
 backend/.env
+foresight-sim/telemetry-generator/output/*.csv
