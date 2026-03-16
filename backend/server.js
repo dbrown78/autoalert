@@ -5,8 +5,12 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 // Validate critical env vars at startup
-if (!process.env.JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET is not set in .env');
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error('FATAL: JWT_SECRET missing or shorter than 32 characters. Exiting.');
+  process.exit(1);
+}
+if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET.length < 32) {
+  console.error('FATAL: JWT_REFRESH_SECRET missing or shorter than 32 characters. Exiting.');
   process.exit(1);
 }
 
@@ -38,18 +42,26 @@ app.use(express.json({ limit: '10kb' }));
 // Rate limiters
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many requests, please try again later' },
+  message: { error: 'Too many requests, please try again later.' },
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: 'Too many auth attempts, please try again later' },
+  message: { error: 'Too many auth attempts, please try again later.' },
+});
+
+const lookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many lookup requests.' },
 });
 
 app.use(globalLimiter);
@@ -65,20 +77,24 @@ sensorBuffer.start();
 // Routes
 app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/vehicles',  require('./routes/vehicles'));
-app.use('/api/dtc',       require('./routes/dtc'));
-app.use('/api/mechanics', require('./routes/mechanics'));
+app.use('/api/dtc',       lookupLimiter, require('./routes/dtc'));
+app.use('/api/mechanics', lookupLimiter, require('./routes/mechanics'));
 app.use('/api/scans',     require('./routes/scans'));
 app.use('/api/telemetry', require('./routes/telemetry'));
 app.use('/api/foresight', require('./routes/foresight'));
 app.use('/api/push',      require('./routes/push'));
 app.use('/api/sensors',   sensorRoutes);
+app.use('/api/user',      require('./routes/user'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
-// Global error handler
+// Global error handler — never expose stack traces in production
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error' });
+  console.error(err);
+  const isProd = process.env.NODE_ENV === 'production';
+  res.status(err.status || 500).json({
+    error: isProd ? 'Internal server error' : err.message,
+  });
 });
 
 const PORT = process.env.PORT || 3001;

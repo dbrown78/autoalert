@@ -1,0 +1,537 @@
+{
+  "DEMO-001": {
+    "vehicle_id": "DEMO-001",
+    "predicted_at": "2026-03-12T11:05:22.776310",
+    "overall_failure_probability": 0.0336,
+    "days_to_failure_estimate": null,
+    "severity": "healthy",
+    "sensors": {
+      "battery_voltage": {
+        "display_name": "Battery Voltage",
+        "contribution": 0.304,
+        "current_mean": 13.45,
+        "status": "nominal"
+      },
+      "catalyst_temp": {
+        "display_name": "Catalyst Temperature",
+        "contribution": 0.229,
+        "current_mean": 648.572,
+        "status": "nominal"
+      },
+      "short_fuel_trim": {
+        "display_name": "Short-Term Fuel Trim",
+        "contribution": 0.159,
+        "current_mean": 4.697,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s2": {
+        "display_name": "O2 Sensor (Downstream)",
+        "contribution": 0.135,
+        "current_mean": 0.493,
+        "status": "nominal"
+      },
+      "maf": {
+        "display_name": "Mass Air Flow",
+        "contribution": 0.046,
+        "current_mean": null,
+        "status": "nominal"
+      },
+      "long_fuel_trim": {
+        "display_name": "Long-Term Fuel Trim",
+        "contribution": 0.046,
+        "current_mean": 9.908,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s1": {
+        "display_name": "O2 Sensor (Upstream)",
+        "contribution": 0.027,
+        "current_mean": 0.757,
+        "status": "nominal"
+      },
+      "coolant_temp": {
+        "display_name": "Coolant Temperature",
+        "contribution": 0.027,
+        "current_mean": 88.665,
+        "status": "nominal"
+      }
+    },
+    "top_failure_modes": [
+      {
+        "mode": "catalytic_converter",
+        "display_name": "Catalytic Converter",
+        "probability": 0.007,
+        "dtc_code": "P0420",
+        "repair_cost_oem": [
+          1200,
+          2500
+        ],
+        "repair_cost_aftermarket": [
+          250,
+          600
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "battery_alternator",
+        "display_name": "Battery / Alternator",
+        "probability": 0.006,
+        "dtc_code": "P0562",
+        "repair_cost_oem": [
+          200,
+          600
+        ],
+        "repair_cost_aftermarket": [
+          80,
+          250
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "o2_sensor",
+        "display_name": "Oxygen Sensor (Upstream)",
+        "probability": 0.004,
+        "dtc_code": "P0130",
+        "repair_cost_oem": [
+          150,
+          350
+        ],
+        "repair_cost_aftermarket": [
+          60,
+          130
+        ],
+        "severity": "medium"
+      }
+    ],
+    "model_version": "foresight_20260312_0702",
+    "confidence": 0.94,
+    "lookback_days": 14
+  },
+  "DEMO-002": {
+    "vehicle_id": "DEMO-002",
+    "predicted_at": "2026-03-12T11:05:22.831451",
+    "overall_failure_probability": 0.0369,
+    "days_to_failure_estimate": null,
+    "severity": "healthy",
+    "sensors": {
+      "battery_voltage": {
+        "display_name": "Battery Voltage",
+        "contribution": 0.304,
+        "current_mean": 13.586,
+        "status": "nominal"
+      },
+      "catalyst_temp": {
+        "display_name": "Catalyst Temperature",
+        "contribution": 0.229,
+        "current_mean": 806.049,
+        "status": "nominal"
+      },
+      "short_fuel_trim": {
+        "display_name": "Short-Term Fuel Trim",
+        "contribution": 0.159,
+        "current_mean": 0.267,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s2": {
+        "display_name": "O2 Sensor (Downstream)",
+        "contribution": 0.135,
+        "current_mean": 0.748,
+        "status": "nominal"
+      },
+      "maf": {
+        "display_name": "Mass Air Flow",
+        "contribution": 0.046,
+        "current_mean": null,
+        "status": "nominal"
+      },
+      "long_fuel_trim": {
+        "display_name": "Long-Term Fuel Trim",
+        "contribution": 0.046,
+        "current_mean": -0.435,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s1": {
+        "display_name": "O2 Sensor (Upstream)",
+        "contribution": 0.027,
+        "current_mean": 0.469,
+        "status": "nominal"
+      },
+      "coolant_temp": {
+        "display_name": "Coolant Temperature",
+        "contribution": 0.027,
+        "current_mean": 92.387,
+        "status": "nominal"
+      }
+    },
+    "top_failure_modes": [
+      {
+        "mode": "catalytic_converter",
+        "display_name": "Catalytic Converter",
+        "probability": 0.008,
+        "dtc_code": "P0420",
+        "repair_cost_oem": [
+          1200,
+          2500
+        ],
+        "repair_cost_aftermarket": [
+          250,
+          600
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "battery_alternator",
+        "display_name": "Battery / Alternator",
+        "probability": 0.006,
+        "dtc_code": "P0562",
+        "repair_cost_oem": [
+          200,
+          600
+        ],
+        "repair_cost_aftermarket": [
+          80,
+          250
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "o2_sensor",
+        "display_name": "Oxygen Sensor (Upstream)",
+        "probability": 0.005,
+        "dtc_code": "P0130",
+        "repair_cost_oem": [
+          150,
+          350
+        ],
+        "repair_cost_aftermarket": [
+          60,
+          130
+        ],
+        "severity": "medium"
+      }
+    ],
+    "model_version": "foresight_20260312_0702",
+    "confidence": 0.97,
+    "lookback_days": 14
+  },
+  "DEMO-003": {
+    "vehicle_id": "DEMO-003",
+    "predicted_at": "2026-03-12T11:05:22.858050",
+    "overall_failure_probability": 0.0455,
+    "days_to_failure_estimate": null,
+    "severity": "healthy",
+    "sensors": {
+      "battery_voltage": {
+        "display_name": "Battery Voltage",
+        "contribution": 0.304,
+        "current_mean": 13.485,
+        "status": "nominal"
+      },
+      "catalyst_temp": {
+        "display_name": "Catalyst Temperature",
+        "contribution": 0.229,
+        "current_mean": 653.483,
+        "status": "nominal"
+      },
+      "short_fuel_trim": {
+        "display_name": "Short-Term Fuel Trim",
+        "contribution": 0.159,
+        "current_mean": 5.251,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s2": {
+        "display_name": "O2 Sensor (Downstream)",
+        "contribution": 0.135,
+        "current_mean": 0.514,
+        "status": "nominal"
+      },
+      "maf": {
+        "display_name": "Mass Air Flow",
+        "contribution": 0.046,
+        "current_mean": null,
+        "status": "nominal"
+      },
+      "long_fuel_trim": {
+        "display_name": "Long-Term Fuel Trim",
+        "contribution": 0.046,
+        "current_mean": -0.946,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s1": {
+        "display_name": "O2 Sensor (Upstream)",
+        "contribution": 0.027,
+        "current_mean": 0.492,
+        "status": "nominal"
+      },
+      "coolant_temp": {
+        "display_name": "Coolant Temperature",
+        "contribution": 0.027,
+        "current_mean": 89.285,
+        "status": "nominal"
+      }
+    },
+    "top_failure_modes": [
+      {
+        "mode": "catalytic_converter",
+        "display_name": "Catalytic Converter",
+        "probability": 0.009,
+        "dtc_code": "P0420",
+        "repair_cost_oem": [
+          1200,
+          2500
+        ],
+        "repair_cost_aftermarket": [
+          250,
+          600
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "battery_alternator",
+        "display_name": "Battery / Alternator",
+        "probability": 0.008,
+        "dtc_code": "P0562",
+        "repair_cost_oem": [
+          200,
+          600
+        ],
+        "repair_cost_aftermarket": [
+          80,
+          250
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "o2_sensor",
+        "display_name": "Oxygen Sensor (Upstream)",
+        "probability": 0.006,
+        "dtc_code": "P0130",
+        "repair_cost_oem": [
+          150,
+          350
+        ],
+        "repair_cost_aftermarket": [
+          60,
+          130
+        ],
+        "severity": "medium"
+      }
+    ],
+    "model_version": "foresight_20260312_0702",
+    "confidence": 0.96,
+    "lookback_days": 14
+  },
+  "DEMO-004": {
+    "vehicle_id": "DEMO-004",
+    "predicted_at": "2026-03-12T11:05:22.892326",
+    "overall_failure_probability": 0.0573,
+    "days_to_failure_estimate": null,
+    "severity": "healthy",
+    "sensors": {
+      "battery_voltage": {
+        "display_name": "Battery Voltage",
+        "contribution": 0.304,
+        "current_mean": 14.025,
+        "status": "nominal"
+      },
+      "catalyst_temp": {
+        "display_name": "Catalyst Temperature",
+        "contribution": 0.229,
+        "current_mean": 648.132,
+        "status": "nominal"
+      },
+      "short_fuel_trim": {
+        "display_name": "Short-Term Fuel Trim",
+        "contribution": 0.159,
+        "current_mean": -1.04,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s2": {
+        "display_name": "O2 Sensor (Downstream)",
+        "contribution": 0.135,
+        "current_mean": 0.476,
+        "status": "nominal"
+      },
+      "maf": {
+        "display_name": "Mass Air Flow",
+        "contribution": 0.046,
+        "current_mean": null,
+        "status": "nominal"
+      },
+      "long_fuel_trim": {
+        "display_name": "Long-Term Fuel Trim",
+        "contribution": 0.046,
+        "current_mean": -0.447,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s1": {
+        "display_name": "O2 Sensor (Upstream)",
+        "contribution": 0.027,
+        "current_mean": 0.468,
+        "status": "nominal"
+      },
+      "coolant_temp": {
+        "display_name": "Coolant Temperature",
+        "contribution": 0.027,
+        "current_mean": 88.677,
+        "status": "nominal"
+      }
+    },
+    "top_failure_modes": [
+      {
+        "mode": "catalytic_converter",
+        "display_name": "Catalytic Converter",
+        "probability": 0.012,
+        "dtc_code": "P0420",
+        "repair_cost_oem": [
+          1200,
+          2500
+        ],
+        "repair_cost_aftermarket": [
+          250,
+          600
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "battery_alternator",
+        "display_name": "Battery / Alternator",
+        "probability": 0.01,
+        "dtc_code": "P0562",
+        "repair_cost_oem": [
+          200,
+          600
+        ],
+        "repair_cost_aftermarket": [
+          80,
+          250
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "o2_sensor",
+        "display_name": "Oxygen Sensor (Upstream)",
+        "probability": 0.008,
+        "dtc_code": "P0130",
+        "repair_cost_oem": [
+          150,
+          350
+        ],
+        "repair_cost_aftermarket": [
+          60,
+          130
+        ],
+        "severity": "medium"
+      }
+    ],
+    "model_version": "foresight_20260312_0702",
+    "confidence": 0.98,
+    "lookback_days": 14
+  },
+  "DEMO-005": {
+    "vehicle_id": "DEMO-005",
+    "predicted_at": "2026-03-12T11:05:22.919349",
+    "overall_failure_probability": 0.0229,
+    "days_to_failure_estimate": null,
+    "severity": "healthy",
+    "sensors": {
+      "battery_voltage": {
+        "display_name": "Battery Voltage",
+        "contribution": 0.304,
+        "current_mean": 13.562,
+        "status": "nominal"
+      },
+      "catalyst_temp": {
+        "display_name": "Catalyst Temperature",
+        "contribution": 0.229,
+        "current_mean": 641.251,
+        "status": "nominal"
+      },
+      "short_fuel_trim": {
+        "display_name": "Short-Term Fuel Trim",
+        "contribution": 0.159,
+        "current_mean": 0.224,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s2": {
+        "display_name": "O2 Sensor (Downstream)",
+        "contribution": 0.135,
+        "current_mean": 0.503,
+        "status": "nominal"
+      },
+      "maf": {
+        "display_name": "Mass Air Flow",
+        "contribution": 0.046,
+        "current_mean": null,
+        "status": "nominal"
+      },
+      "long_fuel_trim": {
+        "display_name": "Long-Term Fuel Trim",
+        "contribution": 0.046,
+        "current_mean": -0.954,
+        "status": "nominal"
+      },
+      "o2_voltage_b1s1": {
+        "display_name": "O2 Sensor (Upstream)",
+        "contribution": 0.027,
+        "current_mean": 0.537,
+        "status": "nominal"
+      },
+      "coolant_temp": {
+        "display_name": "Coolant Temperature",
+        "contribution": 0.027,
+        "current_mean": 89.721,
+        "status": "nominal"
+      }
+    },
+    "top_failure_modes": [
+      {
+        "mode": "catalytic_converter",
+        "display_name": "Catalytic Converter",
+        "probability": 0.005,
+        "dtc_code": "P0420",
+        "repair_cost_oem": [
+          1200,
+          2500
+        ],
+        "repair_cost_aftermarket": [
+          250,
+          600
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "battery_alternator",
+        "display_name": "Battery / Alternator",
+        "probability": 0.004,
+        "dtc_code": "P0562",
+        "repair_cost_oem": [
+          200,
+          600
+        ],
+        "repair_cost_aftermarket": [
+          80,
+          250
+        ],
+        "severity": "high"
+      },
+      {
+        "mode": "o2_sensor",
+        "display_name": "Oxygen Sensor (Upstream)",
+        "probability": 0.003,
+        "dtc_code": "P0130",
+        "repair_cost_oem": [
+          150,
+          350
+        ],
+        "repair_cost_aftermarket": [
+          60,
+          130
+        ],
+        "severity": "medium"
+      }
+    ],
+    "model_version": "foresight_20260312_0702",
+    "confidence": 1.0,
+    "lookback_days": 14
+  }
+}

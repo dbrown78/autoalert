@@ -1,0 +1,115 @@
+{
+  "val_auc": 1.0,
+  "val_ap": 1.0,
+  "n_train": 3060,
+  "n_val": 540,
+  "n_features": 106,
+  "best_iteration": 16,
+  "params": {
+    "objective": "binary",
+    "metric": "auc",
+    "verbosity": -1,
+    "boosting_type": "gbdt",
+    "num_leaves": 106,
+    "max_depth": 14,
+    "learning_rate": 0.1001303991139125,
+    "feature_fraction": 0.759195090518222,
+    "bagging_fraction": 0.4936111842654619,
+    "bagging_freq": 2,
+    "min_child_samples": 10,
+    "lambda_l1": 0.6245760287469887,
+    "lambda_l2": 0.002570603566117596,
+    "n_estimators": 500,
+    "scale_pos_weight": 7.372653200164409,
+    "min_gain_to_split": 0.020584494295802447
+  },
+  "optimized": true,
+  "n_optuna_trials": 50,
+  "test_auc": 0.9994,
+  "test_ap": 0.9947,
+  "feature_importance": [
+    {
+      "feature": "day_normalized",
+      "gain": 12409.93
+    },
+    {
+      "feature": "battery_voltage_mean",
+      "gain": 418.49
+    },
+    {
+      "feature": "battery_voltage_mean_lag3d",
+      "gain": 337.37
+    },
+    {
+      "feature": "catalyst_temp_mean_lag7d",
+      "gain": 270.54
+    },
+    {
+      "feature": "catalyst_temp_mean_lag3d",
+      "gain": 266.35
+    },
+    {
+      "feature": "o2_voltage_b1s2_mean_lag7d",
+      "gain": 206.27
+    },
+    {
+      "feature": "short_fuel_trim_mean",
+      "gain": 204.42
+    },
+    {
+      "feature": "o2_voltage_b1s2_mean_lag3d",
+      "gain": 180.89
+    },
+    {
+      "feature": "battery_voltage_mean_lag7d",
+      "gain": 105.96
+    },
+    {
+      "feature": "short_fuel_trim_mean_lag3d",
+      "gain": 96.44
+    },
+    {
+      "feature": "catalyst_temp_min",
+      "gain": 91.93
+    },
+    {
+      "feature": "short_fuel_trim_mean_lag7d",
+      "gain": 87.01
+    },
+    {
+      "feature": "maf_rate_min",
+      "gain": 81.92
+    },
+    {
+      "feature": "short_fuel_trim_max",
+      "gain": 72.12
+    },
+    {
+      "feature": "long_fuel_trim_mean_delta3d",
+      "gain": 58.32
+    },
+    {
+      "feature": "base_health_inv",
+      "gain": 57.64
+    },
+    {
+      "feature": "catalyst_temp_mean",
+      "gain": 54.59
+    },
+    {
+      "feature": "long_fuel_trim_mean_lag7d",
+      "gain": 49.4
+    },
+    {
+      "feature": "coolant_temp_mean",
+      "gain": 47.75
+    },
+    {
+      "feature": "catalyst_temp_mean_delta7d",
+      "gain": 40.47
+    }
+  ],
+  "saved_at": "2026-03-12T07:02:16.695357",
+  "model_version": "foresight_20260312_0702",
+  "model_path": "model/saved/foresight_20260312_0702/model.lgb"
+}

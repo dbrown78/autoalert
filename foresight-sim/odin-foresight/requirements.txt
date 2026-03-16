@@ -1,0 +1,24 @@
+# Foresight ML Trainer + API — Python dependencies
+
+# ML
+lightgbm>=4.1.0
+optuna>=3.4.0
+scikit-learn>=1.3.0
+
+# Data
+pandas>=2.0.0
+numpy>=1.24.0
+psycopg2-binary>=2.9.0
+
+# API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.4.0
+
+# Config
+python-dotenv>=1.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.25.0  # FastAPI test client

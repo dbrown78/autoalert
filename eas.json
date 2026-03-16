@@ -16,6 +16,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "elitesellers201@gmail.com",
+        "ascAppId": "6760629641",
+        "appleTeamId": "C4Y59WB79P"
+      }
+    }
   }
 }

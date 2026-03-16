@@ -1,155 +1,151 @@
-'use strict';
+/**
+ * routes/foresight.js
+ *
+ * Foresight ML prediction route for AutoAlert Express backend.
+ * Drop this file into the existing routes/ directory.
+ * Register in app.js: app.use('/api/foresight', require('./routes/foresight'));
+ *
+ * Add to .env:
+ *   FORESIGHT_API_URL=http://localhost:8001
+ *
+ * For Railway deployment, set:
+ *   FORESIGHT_API_URL=http://foresight.railway.internal:8001
+ */
 
-const express = require('express');
-const pool = require('../config/db');
-const { analyzeVehicle, getHealthScores } = require('../services/foresight');
+const express           = require('express');
+const router            = express.Router();
 const authenticateToken = require('../middleware/auth');
-const requirePremium    = require('../middleware/requirePremium');
-const router = express.Router();
+const { analyzeVehicle, getHealthScores } = require('../services/foresight');
 
-// ---------------------------------------------------------------------------
-// GET /api/foresight/health?vehicle_id=X
-// Rule-based system health scores { coolant, battery, oil, brakes }
-// ---------------------------------------------------------------------------
-router.get('/health', authenticateToken, async (req, res) => {
-  const vehicleId = parseInt(req.query.vehicle_id, 10);
-  if (isNaN(vehicleId)) return res.status(400).json({ message: 'vehicle_id is required' });
+const FORESIGHT_URL = process.env.FORESIGHT_API_URL || 'http://localhost:8001';
+const TIMEOUT_MS    = 10_000;
+
+/**
+ * Thin fetch wrapper with timeout and error normalization.
+ */
+async function foresightFetch(path, options = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const res = await fetch(`${FORESIGHT_URL}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw Object.assign(new Error(body.detail || `Foresight error ${res.status}`), {
+        statusCode: res.status,
+      });
+    }
+
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * GET /api/foresight/health
+ * Proxy Foresight health check. Used by app startup to confirm ML is available.
+ */
+router.get('/health', async (req, res) => {
+  try {
+    const data = await foresightFetch('/health');
+    res.json(data);
+  } catch (err) {
+    res.status(503).json({ status: 'unavailable', error: err.message });
+  }
+});
+
+/**
+ * GET /api/foresight/predict/:vehicleId
+ * Fetch failure prediction for a real user vehicle.
+ * Requires auth middleware (applied in app.js route registration).
+ */
+router.get('/predict/:vehicleId', async (req, res) => {
+  const { vehicleId } = req.params;
+  const lookbackDays  = parseInt(req.query.days) || 7;
+
+  try {
+    const prediction = await foresightFetch('/predict', {
+      method: 'POST',
+      body: JSON.stringify({
+        vehicle_id:    vehicleId,
+        lookback_days: lookbackDays,
+      }),
+    });
+    res.json(prediction);
+  } catch (err) {
+    const status = err.statusCode === 404 ? 404 : 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/foresight/demo/:vehicleId
+ * Pre-cached demo prediction — instant, no DB query.
+ * Used by Demo Mode in the app (is_demo === true vehicles).
+ */
+router.get('/demo/:vehicleId', async (req, res) => {
+  const { vehicleId } = req.params;
+
+  try {
+    const prediction = await foresightFetch(`/predict/demo/${vehicleId}`);
+    res.json(prediction);
+  } catch (err) {
+    const status = err.statusCode === 404 ? 404 : 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/foresight/model/info
+ * Returns current model metadata — version, AUC, training date.
+ * Used by admin/debug screens.
+ */
+router.get('/model/info', async (req, res) => {
+  try {
+    const info = await foresightFetch('/model/info');
+    res.json(info);
+  } catch (err) {
+    res.status(503).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/foresight/alerts?vehicle_id=X
+ * Rule-based telemetry alerts (Phase 1). Requires auth.
+ */
+router.get('/alerts', authenticateToken, async (req, res) => {
+  const vehicleId = parseInt(req.query.vehicle_id);
+  if (!vehicleId) return res.status(400).json({ error: 'vehicle_id required' });
+
+  try {
+    const alerts = await analyzeVehicle(req.userId, vehicleId);
+    res.json({ alerts });
+  } catch (err) {
+    console.error('[foresight/alerts]', err);
+    res.status(500).json({ error: 'Could not analyze vehicle' });
+  }
+});
+
+/**
+ * GET /api/foresight/component-health?vehicle_id=X
+ * Component health scores derived from active rule-based alerts. Requires auth.
+ */
+router.get('/component-health', authenticateToken, async (req, res) => {
+  const vehicleId = parseInt(req.query.vehicle_id);
+  if (!vehicleId) return res.status(400).json({ error: 'vehicle_id required' });
 
   try {
     const health = await getHealthScores(req.userId, vehicleId);
     res.json({ health });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// GET /api/foresight/alerts?vehicle_id=X
-// Active (unresolved) rule-based foresight alerts
-// ---------------------------------------------------------------------------
-router.get('/alerts', authenticateToken, async (req, res) => {
-  const vehicleId = parseInt(req.query.vehicle_id, 10);
-  if (isNaN(vehicleId)) return res.status(400).json({ message: 'vehicle_id is required' });
-
-  try {
-    const { rows } = await pool.query(
-      `SELECT id, rule_id, sensor, label, severity, detail, reading, created_at, updated_at
-       FROM foresight_alerts
-       WHERE user_id = $1 AND vehicle_id = $2 AND resolved = FALSE
-       ORDER BY
-         CASE severity WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
-         updated_at DESC`,
-      [req.userId, vehicleId]
-    );
-    res.json({ alerts: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// POST /api/foresight/analyze
-// Run rule engine, upsert alerts, return active alerts
-// ---------------------------------------------------------------------------
-router.post('/analyze', authenticateToken, async (req, res) => {
-  const vehicleId = parseInt(req.body.vehicle_id, 10);
-  if (isNaN(vehicleId)) return res.status(400).json({ message: 'vehicle_id is required' });
-
-  try {
-    const alerts = await analyzeVehicle(req.userId, vehicleId);
-    res.json({ alerts, analyzed_at: new Date().toISOString() });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// POST /api/foresight/ml-admin/retrain
-// Proxy to FastAPI retrain endpoint (admin — authenticated users only)
-// ---------------------------------------------------------------------------
-router.post('/ml-admin/retrain', authenticateToken, async (req, res) => {
-  const serviceUrl = process.env.FORESIGHT_SERVICE_URL;
-  if (!serviceUrl) return res.status(503).json({ message: 'Foresight service not configured' });
-
-  try {
-    const response = await fetch(`${serviceUrl}/retrain`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Key': process.env.FORESIGHT_INTERNAL_KEY || '',
-      },
-      signal: AbortSignal.timeout(300_000), // 5 min for training
-    });
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(502).json({ message: 'Retrain failed', error: err.message });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// GET /api/foresight/:vehicle_id
-// ML-powered prediction (premium required).
-// Calls the FastAPI Foresight service; persists result to foresight_predictions.
-// ---------------------------------------------------------------------------
-router.get('/:vehicle_id', authenticateToken, requirePremium, async (req, res) => {
-  const vehicleId = parseInt(req.params.vehicle_id, 10);
-  if (isNaN(vehicleId)) return res.status(400).json({ message: 'Invalid vehicle_id' });
-
-  const serviceUrl   = process.env.FORESIGHT_SERVICE_URL;
-  const internalKey  = process.env.FORESIGHT_INTERNAL_KEY || '';
-
-  if (!serviceUrl) {
-    return res.status(503).json({ message: 'Foresight service not configured' });
-  }
-
-  try {
-    const response = await fetch(`${serviceUrl}/predict`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Key': internalKey,
-      },
-      body: JSON.stringify({ vehicle_id: vehicleId, user_id: req.userId }),
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      return res.status(response.status).json({ message: err.detail || 'Prediction failed' });
-    }
-
-    const prediction = await response.json();
-
-    // Persist prediction for history / retraining
-    await pool.query(
-      `INSERT INTO foresight_predictions
-         (user_id, vehicle_id, maintenance_probability, maintenance_urgency,
-          estimated_service_date, days_until_service, part_scores, data_quality, source)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [
-        req.userId,
-        vehicleId,
-        prediction.maintenance_probability,
-        prediction.maintenance_urgency,
-        prediction.estimated_service_date,
-        prediction.days_until_service,
-        JSON.stringify(prediction.part_scores),
-        prediction.data_quality,
-        prediction.source,
-      ]
-    );
-
-    res.json(prediction);
-  } catch (err) {
-    if (err.name === 'TimeoutError') {
-      return res.status(504).json({ message: 'Foresight service timeout' });
-    }
-    console.error('[foresight] ML service error:', err.message);
-    res.status(502).json({ message: 'Foresight service unavailable' });
+    console.error('[foresight/component-health]', err);
+    res.status(500).json({ error: 'Could not fetch health scores' });
   }
 });
 

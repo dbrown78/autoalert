@@ -16,6 +16,8 @@ const steps = [
   'migrate_push_tokens',
   'migrate_foresight_training',
   'migrate_add_is_premium',
+  'migrate_vehicles_extended',
+  'migrate_refresh_tokens',
 ];
 
 for (const step of steps) {

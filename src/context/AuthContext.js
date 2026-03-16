@@ -78,6 +78,9 @@ export const AuthProvider = ({ children }) => {
       setUser(res.data.user);
       setToken(res.data.token);
       await storage.setItem('token', res.data.token);
+      if (res.data.refreshToken) {
+        await storage.setItem('refresh_token', res.data.refreshToken);
+      }
       await loadSelectedVehicle();
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
@@ -90,18 +93,16 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      console.log('[login] URL:', client.defaults.baseURL + '/auth/login');
-      console.log('[login] body:', { email, password });
       const res = await client.post('/auth/login', { email, password });
       setAuth(res.data.token);
       setUser(res.data.user);
       setToken(res.data.token);
       await storage.setItem('token', res.data.token);
+      if (res.data.refreshToken) {
+        await storage.setItem('refresh_token', res.data.refreshToken);
+      }
       await loadSelectedVehicle();
     } catch (err) {
-      console.log('[login] error status:', err.response?.status);
-      console.log('[login] error data:', err.response?.data);
-      console.log('[login] error message:', err.message);
       setError(err.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
@@ -109,11 +110,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    try {
+      const refreshToken = await storage.getItem('refresh_token');
+      await client.post('/auth/logout', { refreshToken }).catch(() => {});
+    } catch {}
     setAuth(null);
     setUser(null);
     setToken(null);
     setSelectedVehicle(null);
     await storage.deleteItem('token');
+    await storage.deleteItem('refresh_token');
   };
 
   return (

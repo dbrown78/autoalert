@@ -4,10 +4,21 @@ const { calculateTrustScore } = require('../services/trustScore');
 const authenticateToken = require('../middleware/auth');
 const router = express.Router();
 
-// GET /api/mechanics?lat=&lng=&radius=
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 3958.8; // Earth radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// GET /api/mechanics?lat=&lng=&radius=&minRating=
 // Proxies Google Places Nearby Search so the API key stays server-side.
 router.get('/', async (req, res) => {
-  const { lat, lng, radius = 8000 } = req.query;
+  const { lat, lng, radius = 8000, minRating } = req.query;
 
   if (!lat || !lng) {
     return res.status(400).json({ message: 'lat and lng are required' });
@@ -33,6 +44,7 @@ router.get('/', async (req, res) => {
           'places.nationalPhoneNumber',
           'places.location',
           'places.regularOpeningHours.openNow',
+          'places.photos',
         ].join(','),
       },
       body: JSON.stringify({
@@ -61,29 +73,52 @@ router.get('/', async (req, res) => {
       'ford', 'chevy', 'bmw', 'mercedes', 'porsche',
     ];
 
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const minRatingNum = minRating !== undefined ? parseFloat(minRating) : null;
+
     // Normalize to a flat shape the frontend can use directly
-    const all = (data.places || []).map(p => ({
-      id: p.id,
-      name: p.displayName?.text ?? 'Unknown',
-      address: p.formattedAddress ?? '',
-      rating: p.rating ?? null,
-      ratingCount: p.userRatingCount ?? 0,
-      phone: p.nationalPhoneNumber ?? null,
-      lat: p.location?.latitude ?? null,
-      lng: p.location?.longitude ?? null,
-      openNow: p.regularOpeningHours?.openNow ?? null,
-    }));
+    const all = (data.places || []).map(p => {
+      const photoRef = p.photos?.[0]?.name ?? null;
+      const shopLat = p.location?.latitude ?? null;
+      const shopLng = p.location?.longitude ?? null;
+      return {
+        id: p.id,
+        name: p.displayName?.text ?? 'Unknown',
+        address: p.formattedAddress ?? '',
+        rating: p.rating ?? null,
+        ratingCount: p.userRatingCount ?? 0,
+        phone: p.nationalPhoneNumber ?? null,
+        lat: shopLat,
+        lng: shopLng,
+        openNow: p.regularOpeningHours?.openNow ?? null,
+        distanceMiles: shopLat !== null && shopLng !== null
+          ? Math.round(haversine(userLat, userLng, shopLat, shopLng) * 10) / 10
+          : null,
+        photoReference: photoRef,
+        photoUrl: photoRef
+          ? `https://places.googleapis.com/v1/${photoRef}/media?maxWidthPx=400&key=${apiKey}`
+          : null,
+      };
+    });
 
     // Remove dealerships, parts stores, car washes, etc.
-    const filtered = all.filter(s => {
+    let filtered = all.filter(s => {
       const lower = s.name.toLowerCase();
       return !EXCLUDED_KEYWORDS.some(kw => lower.includes(kw));
     });
 
-    // Prioritize established shops (rating >= 4.0, ratingCount >= 50)
+    // Hard filter by minRating if provided
+    if (minRatingNum !== null && !isNaN(minRatingNum)) {
+      filtered = filtered.filter(s => s.rating !== null && s.rating >= minRatingNum);
+    }
+
+    // Prioritize established shops (rating >= 4.0, ratingCount >= 50), then sort by distance
     const preferred = filtered.filter(s => s.rating >= 4.0 && s.ratingCount >= 50);
     const rest      = filtered.filter(s => !(s.rating >= 4.0 && s.ratingCount >= 50));
-    const shops     = [...preferred, ...rest].slice(0, 8);
+    const combined  = [...preferred, ...rest];
+    combined.sort((a, b) => (a.distanceMiles ?? Infinity) - (b.distanceMiles ?? Infinity));
+    const shops = combined.slice(0, 8);
 
     res.json({ shops });
   } catch (err) {

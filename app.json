@@ -2,6 +2,7 @@
   "expo": {
     "name": "autoalert",
     "slug": "autoalert",
+    "scheme": "odin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,13 +18,20 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "AutoAlert needs your location to find nearby mechanics.",
+        "NSBluetoothPeripheralUsageDescription": "AutoAlert uses Bluetooth to connect to your OBD-II adapter and read vehicle sensor data.",
+        "NSBluetoothAlwaysAndWhenInUseUsageDescription": "AutoAlert uses Bluetooth to connect to your OBD-II adapter for real-time vehicle diagnostics.",
+        "NSBluetoothWhileInUseUsageDescription": "AutoAlert uses Bluetooth while in use to stream live sensor data from your OBD-II adapter.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.BLUETOOTH_CONNECT"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",

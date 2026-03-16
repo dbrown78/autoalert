@@ -37,9 +37,8 @@ See `backend/CLAUDE.md` for full backend architecture, route map, services, and 
 
 ```
 src/
-├── api/client.js          # Axios instance; platform-aware base URL
-│                          #   Web: http://localhost:3001/api
-│                          #   Mobile: http://192.168.1.198:3001/api  ← update when network changes
+├── api/client.js          # Axios instance; always points to Railway production URL
+│                          #   https://odin-backend-production-3220.up.railway.app/api
 ├── context/AuthContext.js # Global auth state; JWT storage + /auth/me session restore
 ├── Screens/               # One file per screen (capital S)
 └── components/            # Shared card components
