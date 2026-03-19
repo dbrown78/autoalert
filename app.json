@@ -53,6 +53,9 @@
         "projectId": "8b97a057-0daf-4d69-85ea-7e1844300b42"
       }
     },
-    "entryPoint": "./index.js"
+    "entryPoint": "./index.js",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
