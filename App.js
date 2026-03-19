@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import DTCDetailScreen from './src/screens/DTCDetailScreen';
 import MechanicFinderScreen from './src/screens/MechanicFinderScreen';
@@ -13,6 +14,8 @@ import OBD2ScanScreen from './src/screens/OBD2ScanScreen';
 import TelemetryScreen from './src/screens/TelemetryScreen';
 import ForesightScreen from './src/screens/ForesightScreen';
 import VehicleScreen from './src/screens/VehicleScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
+import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -87,11 +90,14 @@ function AppNavigator() {
             <Stack.Screen name="MechanicFinder"  component={MechanicFinderScreen} />
             <Stack.Screen name="ScanHistory"     component={ScanHistoryScreen} />
             <Stack.Screen name="Vehicles"        component={VehicleScreen} />
+            <Stack.Screen name="Settings"        component={SettingsScreen} />
+            <Stack.Screen name="TermsOfService"  component={TermsOfServiceScreen} />
           </>
         ) : (
           <>
-            <Stack.Screen name="Login"    component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="Login"             component={LoginScreen} />
+            <Stack.Screen name="Register"          component={RegisterScreen} />
+            <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
           </>
         )}
       </Stack.Navigator>

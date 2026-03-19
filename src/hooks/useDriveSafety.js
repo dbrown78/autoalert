@@ -30,9 +30,9 @@ import { SENSOR_META, SENSOR_KEYS, getSensorStatus } from '../utils/sensorThresh
  *   hasABS:  boolean — true when ABS module sensor data has been seen
  *   hasTCM:  boolean — true when TCM sensor data has been seen
  */
-export default function useDriveSafety(vehicleId) {
-  const { sensors: streamSensors, streaming } = useSensorStream(vehicleId);
-  const { bleState, sensors: bleSensors } = useBLEManager();
+export default function useDriveSafety(vehicleId, { bleEnabled = false } = {}) {
+  const { sensors: streamSensors, streaming } = useSensorStream({ enabled: bleEnabled });
+  const { bleState, sensors: bleSensors } = useBLEManager({ enabled: bleEnabled });
   const bleConnected = bleState === 'connected';
 
   const [foresightAlerts, setForesightAlerts] = useState([]);

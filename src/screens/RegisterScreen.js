@@ -25,13 +25,16 @@ export default function RegisterScreen({ navigation }) {
   const rajdhaniReg = fontsLoaded ? 'Rajdhani_400Regular'      : undefined;
   const rajdhaniBold= fontsLoaded ? 'Rajdhani_600SemiBold'     : undefined;
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (password !== confirm) {
       setLocalError('PASSWORDS DO NOT MATCH');
       return;
     }
     setLocalError('');
-    register(name, email, password);
+    const result = await register(name, email, password);
+    if (result?.requiresVerification) {
+      navigation.navigate('EmailVerification', { email: result.email });
+    }
   }
 
   const displayError = localError || error;
@@ -55,7 +58,7 @@ export default function RegisterScreen({ navigation }) {
       >
         {/* Header */}
         <Text style={[S.wordmark, { fontFamily: monoFont }]}>ODIN</Text>
-        <Text style={[S.subword, { fontFamily: monoFont }]}>AUTOCALERT</Text>
+        <Text style={[S.subword, { fontFamily: monoFont }]}>AUTOALERT</Text>
         <View style={S.divider} />
         <Text style={[S.tagline, { fontFamily: rajdhaniReg }]}>OPERATOR REGISTRATION</Text>
 

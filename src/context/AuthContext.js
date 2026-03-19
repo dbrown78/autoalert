@@ -5,18 +5,31 @@ import client from '../api/client';
 const storage = {
   getItem: async (key) => {
     if (Platform.OS === 'web') return localStorage.getItem(key);
-    const SecureStore = await import('expo-secure-store');
-    return SecureStore.getItemAsync(key);
+    try {
+      const SecureStore = await import('expo-secure-store');
+      return await SecureStore.getItemAsync(key);
+    } catch (e) {
+      console.warn('SecureStore read failed:', e);
+      return null;
+    }
   },
   setItem: async (key, value) => {
     if (Platform.OS === 'web') return localStorage.setItem(key, value);
-    const SecureStore = await import('expo-secure-store');
-    return SecureStore.setItemAsync(key, value);
+    try {
+      const SecureStore = await import('expo-secure-store');
+      return await SecureStore.setItemAsync(key, value);
+    } catch (e) {
+      console.warn('SecureStore write failed:', e);
+    }
   },
   deleteItem: async (key) => {
     if (Platform.OS === 'web') return localStorage.removeItem(key);
-    const SecureStore = await import('expo-secure-store');
-    return SecureStore.deleteItemAsync(key);
+    try {
+      const SecureStore = await import('expo-secure-store');
+      return await SecureStore.deleteItemAsync(key);
+    } catch (e) {
+      console.warn('SecureStore delete failed:', e);
+    }
   },
 };
 
@@ -69,11 +82,25 @@ export const AuthProvider = ({ children }) => {
     restoreSession();
   }, []);
 
+  // Used by EmailVerificationScreen after successful verification
+  const loginWithToken = async (tok, userData) => {
+    setAuth(tok);
+    setUser(userData);
+    setToken(tok);
+    await storage.setItem('token', tok);
+    await loadSelectedVehicle();
+  };
+
   const register = async (name, email, password) => {
     setLoading(true);
     setError(null);
     try {
       const res = await client.post('/auth/register', { name, email, password });
+      if (res.data.requiresVerification) {
+        // Return signal for RegisterScreen to navigate to verification
+        return { requiresVerification: true, email };
+      }
+      // Fallback: direct login (e.g. if email verification is disabled)
       setAuth(res.data.token);
       setUser(res.data.user);
       setToken(res.data.token);
@@ -82,8 +109,10 @@ export const AuthProvider = ({ children }) => {
         await storage.setItem('refresh_token', res.data.refreshToken);
       }
       await loadSelectedVehicle();
+      return {};
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
+      return {};
     } finally {
       setLoading(false);
     }
@@ -102,8 +131,14 @@ export const AuthProvider = ({ children }) => {
         await storage.setItem('refresh_token', res.data.refreshToken);
       }
       await loadSelectedVehicle();
+      return {};
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const data = err.response?.data;
+      if (data?.requiresVerification) {
+        return { requiresVerification: true, email: data.email };
+      }
+      setError(data?.message || data?.error || 'Login failed');
+      return {};
     } finally {
       setLoading(false);
     }
@@ -126,7 +161,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       user, token, loading, error, appReady,
       selectedVehicle, setSelectedVehicle,
-      register, login, logout,
+      register, login, logout, loginWithToken,
     }}>
       {children}
     </AuthContext.Provider>

@@ -37,7 +37,7 @@ export default function LoginScreen({ navigation }) {
       <View style={S.inner}>
         {/* Header */}
         <Text style={[S.wordmark, { fontFamily: monoFont }]}>ODIN</Text>
-        <Text style={[S.subword, { fontFamily: monoFont }]}>AUTOCALERT</Text>
+        <Text style={[S.subword, { fontFamily: monoFont }]}>AUTOALERT</Text>
         <View style={S.divider} />
         <Text style={[S.tagline, { fontFamily: rajdhaniReg }]}>PREDICTIVE VEHICLE INTELLIGENCE</Text>
 
@@ -70,7 +70,12 @@ export default function LoginScreen({ navigation }) {
 
           <TouchableOpacity
             style={[S.btn, loading && S.btnDisabled]}
-            onPress={() => login(email, password)}
+            onPress={async () => {
+              const result = await login(email, password);
+              if (result?.requiresVerification) {
+                navigation.navigate('EmailVerification', { email: result.email });
+              }
+            }}
             disabled={loading}
             activeOpacity={0.7}
           >

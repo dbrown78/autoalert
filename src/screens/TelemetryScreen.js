@@ -322,14 +322,14 @@ export default function TelemetryScreen() {
   const isNarrow = screenWidth < 375;
 
   const { sensors: streamSensors, streaming, error, startStream, stopStream } = useSensorStream(vehicleId);
-  const { bleState, sensors: bleSensors, isSupported: bleSupported } = useBLEManager();
+  const { bleState, sensors: bleSensors, isSupported: bleSupported } = useBLEManager({ enabled: true });
   const {
     status: safetyStatus,
     reason: safetyReason,
     source: safetySource,
     hasABS,
     hasTCM,
-  } = useDriveSafety(vehicleId);
+  } = useDriveSafety(vehicleId, { bleEnabled: true });
 
   const bleConnected = bleState === 'connected';
 

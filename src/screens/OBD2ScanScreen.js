@@ -77,7 +77,7 @@ export default function OBD2ScanScreen({ navigation }) {
     devices, connecting, connectionError,
     startScan, stopScan, connect: bleConnect, disconnect,
     requestManualScan, sendCommand,
-  } = useBLEManager();
+  } = useBLEManager({ enabled: true });
 
   // Map BLE state to the legacy adapterStatus shape used by <StatusBar>
   const adapterStatus =

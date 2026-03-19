@@ -12,7 +12,7 @@ const SEVERITY_COLORS = { high: '#D0453A', medium: '#C08B30', low: '#4CAF82' };
 export default function HomeScreen({ navigation }) {
   const { user, logout, selectedVehicle } = useAuth();
   const { status: safetyStatus, reason: safetyReason, source: safetySource } =
-    useDriveSafety(selectedVehicle?.id ?? null);
+    useDriveSafety(selectedVehicle?.id ?? null, { bleEnabled: false });
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,6 +56,9 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('ScanHistory')} style={S.headerBtn}>
             <Text style={S.headerBtnTxt}>History</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={S.headerBtn}>
+            <Text style={S.headerBtnTxt}>Settings</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={logout}>
             <Text style={S.logoutBtn}>Log out</Text>
