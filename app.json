@@ -14,7 +14,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.mhlabs201.odin",
-      "buildNumber": "1",
+      "buildNumber": "10",
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "AutoAlert needs your location to find nearby mechanics.",
