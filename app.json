@@ -18,10 +18,14 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "AutoAlert needs your location to find nearby mechanics.",
+        "NSBluetoothAlwaysUsageDescription": "AutoAlert uses Bluetooth to connect to your OBD2 scanner.",
         "NSBluetoothPeripheralUsageDescription": "AutoAlert uses Bluetooth to connect to your OBD-II adapter and read vehicle sensor data.",
         "NSBluetoothAlwaysAndWhenInUseUsageDescription": "AutoAlert uses Bluetooth to connect to your OBD-II adapter for real-time vehicle diagnostics.",
         "NSBluetoothWhileInUseUsageDescription": "AutoAlert uses Bluetooth while in use to stream live sensor data from your OBD-II adapter.",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "keychain-access-groups": ["$(AppIdentifierPrefix)com.mhlabs201.odin"]
       }
     },
     "android": {

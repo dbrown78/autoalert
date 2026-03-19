@@ -1,4 +1,5 @@
-import { View, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -16,6 +17,40 @@ import ForesightScreen from './src/screens/ForesightScreen';
 import VehicleScreen from './src/screens/VehicleScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
+
+class ErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('[ErrorBoundary]', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <View style={{ flex: 1, backgroundColor: '#080808', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <Text style={{ color: '#C0C0C0', fontSize: 16, fontWeight: '800', letterSpacing: 2, marginBottom: 12 }}>
+            SOMETHING WENT WRONG
+          </Text>
+          <Text style={{ color: '#555', fontSize: 12, textAlign: 'center', marginBottom: 24 }}>
+            {this.state.error?.message || 'An unexpected error occurred.'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => this.setState({ hasError: false, error: null })}
+            style={{ borderWidth: 1, borderColor: '#C0C0C0', paddingVertical: 10, paddingHorizontal: 24 }}
+          >
+            <Text style={{ color: '#C0C0C0', fontSize: 10, fontWeight: '800', letterSpacing: 2 }}>RETRY</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -107,8 +142,10 @@ function AppNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppNavigator />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
