@@ -46,7 +46,15 @@
     "plugins": [
       "expo-secure-store",
       "expo-location",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": false
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
