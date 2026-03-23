@@ -86,19 +86,25 @@ router.get('/predict/:vehicleId', async (req, res) => {
 
 /**
  * GET /api/foresight/demo/:vehicleId
- * Pre-cached demo prediction — instant, no DB query.
- * Used by Demo Mode in the app (is_demo === true vehicles).
+ * Pre-cached demo prediction — returns static payload when ML service is unavailable.
+ * Replace with live foresightFetch call once FastAPI service is on Railway.
  */
 router.get('/demo/:vehicleId', async (req, res) => {
   const { vehicleId } = req.params;
 
-  try {
-    const prediction = await foresightFetch(`/predict/demo/${vehicleId}`);
-    res.json(prediction);
-  } catch (err) {
-    const status = err.statusCode === 404 ? 404 : 500;
-    res.status(status).json({ error: err.message });
-  }
+  res.json({
+    vehicle_id:     vehicleId,
+    model_version:  'demo-v1.0',
+    predicted_at:   new Date().toISOString(),
+    components: [
+      { name: 'Coolant System',     probability: 0.72, severity: 'late',    days_to_failure: 18 },
+      { name: 'Battery / Charging', probability: 0.61, severity: 'early',   days_to_failure: 34 },
+      { name: 'Oil System',         probability: 0.12, severity: 'healthy', days_to_failure: null },
+      { name: 'Brake System',       probability: 0.08, severity: 'healthy', days_to_failure: null },
+    ],
+    overall_health: 0.58,
+    note: 'Demo prediction — connect OBD2 adapter for live ML analysis',
+  });
 });
 
 /**
