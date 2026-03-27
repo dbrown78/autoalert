@@ -33,7 +33,7 @@ import psycopg2
 
 from features.engineer import build_feature_matrix, get_feature_columns
 from data.loader import pivot_sensors, _get_conn
-from curves.library import FAILURE_MODES
+from model.failure_modes import FAILURE_MODES
 
 log = logging.getLogger(__name__)
 

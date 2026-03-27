@@ -108,9 +108,8 @@ async def lifespan(app: FastAPI):
         else:
             log.warning("No demo predictions cached — run scripts/train.py to generate them")
 
-    except FileNotFoundError as e:
-        log.error(f"Model not found: {e}")
-        log.error("Run: python scripts/train.py before starting the API")
+    except Exception as e:
+        log.error(f"Predictor load failed: {e}")
         # Allow startup to continue — /health will report model=missing
         _predictor = None
 

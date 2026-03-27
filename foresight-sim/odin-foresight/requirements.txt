@@ -1,4 +1,5 @@
 # Foresight ML Trainer + API — Python dependencies
+# rebuild: 2026-03-26
 
 # ML
 lightgbm>=4.1.0
