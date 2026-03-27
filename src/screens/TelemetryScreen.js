@@ -7,7 +7,9 @@ import { useAuth } from '../context/AuthContext';
 import useSensorStream from '../hooks/useSensorStream';
 import useBLEManager from '../hooks/useBLEManager';
 import useDriveSafety from '../hooks/useDriveSafety';
+import { useSensorHistory } from '../hooks/useSensorHistory';
 import DriveSafetyCard from '../components/DriveSafetyCard';
+import SensorHistoryChart from '../components/SensorHistoryChart';
 import {
   SENSOR_META, SENSOR_KEYS,
   getSensorStatus, statusColor, barFillPct,
@@ -332,6 +334,11 @@ export default function TelemetryScreen() {
     hasTCM,
   } = useDriveSafety(vehicleId, { bleEnabled: true });
 
+  const {
+    seriesMap, window: histWindow, loading: histLoading,
+    error: histError, fetchHistory, changeWindow,
+  } = useSensorHistory(vehicleId);
+
   const bleConnected = bleState === 'connected';
 
   // True during the first ~3s after BLE connect before any sensor data arrives.
@@ -375,6 +382,11 @@ export default function TelemetryScreen() {
   }, [bleState]);
 
   useEffect(() => () => clearTimeout(bannerTimerRef.current), []);
+
+  // Fetch sensor history when vehicleId becomes available
+  useEffect(() => {
+    if (vehicleId) fetchHistory();
+  }, [vehicleId]);
 
   // Most-recent recorded_at across all sensors
   const lastUpdated = hasSensors
@@ -546,6 +558,17 @@ export default function TelemetryScreen() {
                   </Text>
                 </View>
               )}
+
+              {/* ── Sensor history chart ── */}
+              <View style={{ width: '100%' }}>
+                <SensorHistoryChart
+                  seriesMap={seriesMap}
+                  loading={histLoading}
+                  error={histError}
+                  window={histWindow}
+                  onWindowChange={changeWindow}
+                />
+              </View>
             </ScrollView>
           )}
         </>
