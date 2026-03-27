@@ -42,8 +42,8 @@ export default function CostComparisonCard({
           <Text style={S.footerLabel}>⏱ Labor estimate</Text>
           <Text style={S.footerValue}>{laborHoursMin}–{laborHoursMax} hrs</Text>
         </View>
-        <View style={[S.diyBadge, { backgroundColor: DIY_COLORS[diyDifficulty] }]}>
-          <Text style={S.diyText}>{DIY_LABELS[diyDifficulty]}</Text>
+        <View style={[S.diyBadge, { backgroundColor: DIY_COLORS[diyDifficulty] ?? '#777777' }]}>
+          <Text style={S.diyText}>{DIY_LABELS[diyDifficulty] ?? ''}</Text>
         </View>
       </View>
     </View>

@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "4e9001d1-7ae2-494d-8412-b0222dd8ae9d"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.mhlabs201.backend",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -84,9 +84,17 @@ export default function ForesightCard({ vehicleId: vehicleIdProp, isPremium: isP
           <Text style={S.paywallSub}>
             AI-powered failure prediction before symptoms appear.
           </Text>
-          <View style={S.upgradeBtn}>
+          <TouchableOpacity
+            style={S.upgradeBtn}
+            activeOpacity={0.75}
+            onPress={() => Alert.alert(
+              'Premium Coming Soon',
+              'ODIN AutoAlert Premium unlocks Foresight predictive alerts, Shop Trust Scores, and continuous sensor streaming.\n\nLaunching with v1.1 — stay tuned.',
+              [{ text: 'Got it', style: 'default' }]
+            )}
+          >
             <Text style={S.upgradeBtnText}>UPGRADE TO PREMIUM</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -159,11 +167,11 @@ function PartScores({ partScores }) {
   return (
     <View style={S.partSection}>
       {Object.entries(partScores).map(([system, data]) => {
-        const rc  = RISK_COLORS[data.risk_level] ?? RISK_COLORS.low;
-        const pct = Math.round((data.probability ?? 0) * 100);
+        const rc  = RISK_COLORS[data?.risk_level] ?? RISK_COLORS.low;
+        const pct = Math.round((data?.probability ?? 0) * 100);
         return (
           <View key={system} style={S.partRow}>
-            <Text style={S.partLabel}>{data.label}</Text>
+            <Text style={S.partLabel}>{data?.label}</Text>
             <View style={[S.partBadge, { backgroundColor: rc.color + '22' }]}>
               <Text style={[S.partBadgeText, { color: rc.color }]}>{rc.label}</Text>
             </View>

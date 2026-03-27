@@ -58,12 +58,12 @@ function ProbabilityGauge({ prob, severity }) {
 }
 
 function FailureModeCard({ mode }) {
-  const pct = Math.round((mode.probability ?? 0) * 100);
+  const pct = Math.round((mode?.probability ?? 0) * 100);
   return (
     <View style={FM.row}>
       <View style={FM.left}>
-        <Text style={FM.name}>{mode.display_name}</Text>
-        <Text style={FM.dtc}>{mode.dtc_code}</Text>
+        <Text style={FM.name}>{mode?.display_name}</Text>
+        <Text style={FM.dtc}>{mode?.dtc_code}</Text>
       </View>
       <View style={FM.right}>
         <Text style={FM.prob}>{pct}%</Text>

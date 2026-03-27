@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Linking } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import ForesightCard from '../components/ForesightCard';
@@ -99,9 +99,9 @@ export default function HomeScreen({ navigation }) {
           scans.map(s => {
             const sev = (s.severity ?? '').toLowerCase();
             const color = SEVERITY_COLORS[sev] || '#777777';
-            const date = new Date(s.scanned_at).toLocaleDateString('en-US', {
-              month: 'short', day: 'numeric',
-            });
+            const date = s.scanned_at
+              ? new Date(s.scanned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              : '—';
             return (
               <TouchableOpacity
                 key={s.id}
@@ -127,7 +127,11 @@ export default function HomeScreen({ navigation }) {
         )}
       </ScrollView>
 
-      <TouchableOpacity style={S.emergencyBtn}>
+      <TouchableOpacity
+        style={S.emergencyBtn}
+        onPress={() => Linking.openURL('tel:18004357628')}
+        activeOpacity={0.75}
+      >
         <Text style={S.emergencyTxt}>🆘 ROADSIDE ASSISTANCE</Text>
       </TouchableOpacity>
     </View>

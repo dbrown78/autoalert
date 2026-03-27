@@ -315,7 +315,8 @@ export default function MechanicFinderScreen({ route, navigation }) {
       if (minRating != null) params.minRating = minRating;
       const res = await client.get('/mechanics', { params });
       setShops(res.data.shops ?? []);
-    } catch {
+    } catch (err) {
+      console.error('[AutoAlert] MechanicFinder load error:', err);
       setError('Could not load nearby mechanics. Please try again.');
     } finally {
       setLoading(false);

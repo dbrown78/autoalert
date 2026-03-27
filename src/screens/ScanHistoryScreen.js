@@ -60,7 +60,7 @@ function dateLabel(iso) {
 function buildSections(scans) {
   const map = new Map();
   for (const scan of scans) {
-    const key = dateLabel(scan.scanned_at);
+    const key = dateLabel(scan?.scanned_at);
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(scan);
   }
@@ -178,7 +178,7 @@ function ScanCard({ scan, onDelete, onPress, loading = false }) {
         {/* Bottom row: timestamp + Find Parts */}
         <View style={S.cardFooter}>
           <Text style={S.time}>
-            {loading ? 'Loading…' : timeAgo(scan.scanned_at)}
+            {loading ? 'Loading…' : timeAgo(scan?.scanned_at)}
           </Text>
           <Pressable
             style={({ pressed }) => [S.partsBtn, pressed && S.partsBtnPressed]}

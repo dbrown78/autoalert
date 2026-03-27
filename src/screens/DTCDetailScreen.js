@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native';
 import client from '../api/client';
 import CostComparisonCard from '../components/CostComparisonCard';
 import DIYRepairCard from '../components/DIYRepairCard';
 import DriveSafetyCard from '../components/DriveSafetyCard';
 import PartsLinks from '../components/PartsLinks';
 import { useAuth } from '../context/AuthContext';
+import { resolvePartName } from '../utils/dtcPartMap';
 
 const SEVERITY_COLORS = { high: '#D0453A', medium: '#C08B30', low: '#4CAF82' };
 const URGENCY_COLORS = { 'Check gas cap first': '#4CAF82', 'Within 1 month': '#4CAF82', 'Within 2 weeks': '#C08B30', 'Within 1 week': '#D0453A' };
@@ -79,8 +80,8 @@ export default function DTCDetailScreen({ route, navigation }) {
           vehicle_id: selectedVehicle?.id ?? null,
           raw_data: {
             dtc_code: code,
-            severity: res.data.dtc.severity,
-            urgency: res.data.dtc.urgency,
+            severity: res.data.dtc?.severity,
+            urgency: res.data.dtc?.urgency,
           },
         }).catch(() => {});
       })
@@ -186,7 +187,7 @@ export default function DTCDetailScreen({ route, navigation }) {
               laborHoursMax={detail.labor_hours_max}
               diyDifficulty={detail.diy_difficulty}
             />
-            <PartsLinks partName={detail.short_description} vehicle={displayVehicle} />
+            <PartsLinks partName={resolvePartName(code, detail)} vehicle={displayVehicle} />
           </>
         )}
 
@@ -212,7 +213,11 @@ export default function DTCDetailScreen({ route, navigation }) {
           <Text style={S.mechanicSub}>Nearby auto repair shops</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={S.emergencyBtn}>
+        <TouchableOpacity
+          style={S.emergencyBtn}
+          onPress={() => Linking.openURL('tel:18004357628')}
+          activeOpacity={0.75}
+        >
           <Text style={S.emergencyTxt}>🆘 Roadside Assistance</Text>
         </TouchableOpacity>
 

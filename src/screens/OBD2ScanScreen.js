@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, ActivityIndicator,
+  StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import useBLEManager from '../hooks/useBLEManager';
 import BLEDevicePicker from '../components/BLEDevicePicker';
-import { initELM327, pollAllPIDs } from '../utils/obd2/OBD2Protocol';
+import { initELM327, pollAllPIDs } from '../utils/OBD2Protocol';
 
 const C = {
   bg: '#080808', surface: '#1A1A1A', border: '#2A2A2A',
@@ -120,7 +120,7 @@ export default function OBD2ScanScreen({ navigation }) {
           const timestamp = new Date().toISOString();
           const valid = results
             .filter(r => r.value != null)
-            .map(r => ({ sensor_type: r.name, value: r.value, recorded_at: timestamp }));
+            .map(r => ({ sensor_type: r?.name, value: r.value, recorded_at: timestamp }));
           if (valid.length) sensorBatchRef.current.push(...valid);
         } catch {}
       }, 2000);
@@ -164,7 +164,15 @@ export default function OBD2ScanScreen({ navigation }) {
   }, [lastDTC, selectedVehicle?.id]);
 
   const handleConnect = useCallback(() => {
-    if (!isSupported) return;
+    console.log('[AutoAlert] handleConnect fired — isSupported:', isSupported, 'bleState:', bleState);
+    if (!isSupported) {
+      Alert.alert(
+        'BLE Adapter — Coming in v1.1',
+        'Bluetooth OBD-II adapter support is built and ready for v1.1.\n\nFor now, use the SCAN VEHICLE button to pull fault codes via the server.',
+        [{ text: 'Got it', style: 'default' }]
+      );
+      return;
+    }
     if (bleState === 'connected') {
       disconnect();
       setAdapterVersion(null);
@@ -237,6 +245,7 @@ export default function OBD2ScanScreen({ navigation }) {
           style={[S.btn, isConnected && S.btnDisabled]}
           onPress={handleConnect}
           disabled={adapterStatus === 'connecting'}
+          activeOpacity={0.75}
         >
           {adapterStatus === 'connecting' ? (
             <ActivityIndicator size="small" color={C.accent} />

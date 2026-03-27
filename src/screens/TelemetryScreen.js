@@ -4,7 +4,7 @@ import {
   ActivityIndicator, TouchableOpacity, Animated, useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import useSensorStream from '../../hooks/useSensorStream';
+import useSensorStream from '../hooks/useSensorStream';
 import useBLEManager from '../hooks/useBLEManager';
 import useDriveSafety from '../hooks/useDriveSafety';
 import DriveSafetyCard from '../components/DriveSafetyCard';
@@ -321,7 +321,8 @@ export default function TelemetryScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const isNarrow = screenWidth < 375;
 
-  const { sensors: streamSensors, streaming, error, startStream, stopStream } = useSensorStream(vehicleId);
+  const [streamEnabled, setStreamEnabled] = useState(false);
+  const { sensorData: streamSensors, isStreaming: streaming, streamError: error } = useSensorStream({ enabled: streamEnabled });
   const { bleState, sensors: bleSensors, isSupported: bleSupported } = useBLEManager({ enabled: true });
   const {
     status: safetyStatus,
@@ -343,12 +344,13 @@ export default function TelemetryScreen() {
 
   // Merge BLE values over mock-stream values when BLE is connected.
   const sensors = useMemo(() => {
-    if (!bleConnected || !Object.keys(bleSensors).length) return streamSensors;
+    const base = streamSensors ?? {};
+    if (!bleConnected || !Object.keys(bleSensors).length) return base;
     const now = new Date().toISOString();
     const bleWrapped = Object.fromEntries(
       Object.entries(bleSensors).map(([k, v]) => [k, { value: v, recorded_at: now }])
     );
-    return { ...streamSensors, ...bleWrapped };
+    return { ...base, ...bleWrapped };
   }, [bleConnected, bleSensors, streamSensors]);
 
   const hasSensors = Object.keys(sensors).length > 0;
@@ -439,7 +441,7 @@ export default function TelemetryScreen() {
               </View>
             ) : (
               <TouchableOpacity
-                onPress={streaming ? stopStream : startStream}
+                onPress={() => setStreamEnabled(v => !v)}
                 style={[S.streamBtn, streaming ? S.streamBtnStop : S.streamBtnStart]}
                 activeOpacity={0.75}
               >

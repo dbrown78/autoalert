@@ -31,7 +31,7 @@ import { SENSOR_META, SENSOR_KEYS, getSensorStatus } from '../utils/sensorThresh
  *   hasTCM:  boolean — true when TCM sensor data has been seen
  */
 export default function useDriveSafety(vehicleId, { bleEnabled = false } = {}) {
-  const { sensors: streamSensors, streaming } = useSensorStream({ enabled: bleEnabled });
+  const { sensorData: streamSensors, isStreaming: streaming } = useSensorStream({ enabled: bleEnabled });
   const { bleState, sensors: bleSensors } = useBLEManager({ enabled: bleEnabled });
   const bleConnected = bleState === 'connected';
 
