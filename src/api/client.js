@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
 
-const client = axios.create({ baseURL: 'https://odin-backend-production-3220.up.railway.app/api' });
+export const API_URL = __DEV__
+  ? 'http://localhost:3000'
+  : 'https://odin-backend-production-3220.up.railway.app';
+
+const client = axios.create({ baseURL: `${API_URL}/api` });
 
 // ── Storage helpers (mirrors AuthContext — needed without circular dep) ────────
 

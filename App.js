@@ -17,6 +17,8 @@ import ForesightScreen from './src/screens/ForesightScreen';
 import VehicleScreen from './src/screens/VehicleScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import TermsOfServiceScreen from './src/screens/TermsOfServiceScreen';
+import ReportSubmissionScreen from './src/screens/ReportSubmissionScreen';
+import FollowUpScanScreen from './src/screens/FollowUpScanScreen';
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
@@ -126,7 +128,9 @@ function AppNavigator() {
             <Stack.Screen name="ScanHistory"     component={ScanHistoryScreen} />
             <Stack.Screen name="Vehicles"        component={VehicleScreen} />
             <Stack.Screen name="Settings"        component={SettingsScreen} />
-            <Stack.Screen name="TermsOfService"  component={TermsOfServiceScreen} />
+            <Stack.Screen name="TermsOfService"     component={TermsOfServiceScreen} />
+            <Stack.Screen name="ReportSubmission"   component={ReportSubmissionScreen} />
+            <Stack.Screen name="FollowUpScan"        component={FollowUpScanScreen} />
           </>
         ) : (
           <>

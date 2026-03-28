@@ -66,6 +66,44 @@ router.get('/stream/active', authenticateToken, (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /api/sensors/:vehicleId/readings
+// Body: { readings: [{ sensor_type, value, unit, timestamp }] }
+// ---------------------------------------------------------------------------
+router.post('/:vehicleId/readings', authenticateToken, async (req, res) => {
+  const vehicleId = parseInt(req.params.vehicleId, 10);
+  if (isNaN(vehicleId)) return res.status(400).json({ error: 'Invalid vehicle_id' });
+
+  const { readings } = req.body;
+  if (!Array.isArray(readings) || readings.length === 0) {
+    return res.status(400).json({ error: 'readings array required' });
+  }
+
+  try {
+    const values = readings.map((r, i) => {
+      const base = i * 5;
+      return `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`;
+    });
+    const params = readings.flatMap(r => [
+      vehicleId,
+      r.sensor_type,
+      r.value,
+      r.unit || null,
+      r.timestamp ? new Date(r.timestamp) : new Date(),
+    ]);
+    await pool.query(
+      `INSERT INTO sensor_readings (vehicle_id, sensor_type, value, unit, recorded_at)
+       VALUES ${values.join(', ')}
+       ON CONFLICT DO NOTHING`,
+      params
+    );
+    res.json({ inserted: readings.length });
+  } catch (err) {
+    console.error('[sensors] POST readings error:', err);
+    res.status(500).json({ error: 'Failed to save readings' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/sensors/:vehicle_id/latest
 // Returns in-memory latest reading per sensor (no DB query)
 // ---------------------------------------------------------------------------

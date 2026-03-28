@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { API_URL } from '../api/client';
 import { BleManager, State } from 'react-native-ble-plx';
 import { Platform, PermissionsAndroid } from 'react-native';
 import { Buffer } from 'buffer';
@@ -87,7 +88,7 @@ const manager = new BleManager();
 //   isScanning, nearbyDevices, isConnecting, error
 //   startScan, stopScan, connectToDevice, disconnect
 // ---------------------------------------------------------------------------
-export default function useBLEManager({ enabled = false } = {}) {
+export default function useBLEManager({ enabled = false, vehicleId = null, authToken = null } = {}) {
   const [hwState, setHwState]           = useState(State.Unknown);
   const [isScanning, setIsScanning]     = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -100,6 +101,7 @@ export default function useBLEManager({ enabled = false } = {}) {
 
   const deviceRef           = useRef(null);
   const writeCharRef        = useRef(null);
+  const sensorsRef          = useRef({});
   const notifySubRef        = useRef(null);
   const pollIntervalRef     = useRef(null);
   const responseBufferRef   = useRef('');
@@ -265,6 +267,7 @@ export default function useBLEManager({ enabled = false } = {}) {
                 if (value !== null) {
                   const sensorName = PID_MAP[currentPid].name;
                   setSensors((prev) => ({ ...prev, [sensorName]: value }));
+                  sensorsRef.current = { ...sensorsRef.current, [sensorName]: value };
                 }
               }
             });
@@ -281,6 +284,7 @@ export default function useBLEManager({ enabled = false } = {}) {
         deviceRef.current = null;
         setIsConnected(false);
         setSensors({});
+        sensorsRef.current = {};
       });
 
       // ELM327 boot sequence
@@ -321,6 +325,7 @@ export default function useBLEManager({ enabled = false } = {}) {
     deviceRef.current = null;
     setIsConnected(false);
     setSensors({});
+    sensorsRef.current = {};
   }, [stopPolling]);
 
   // ── DTC commands ──────────────────────────────────────────────────────────
@@ -366,6 +371,48 @@ export default function useBLEManager({ enabled = false } = {}) {
       startPolling();
     }
   }, [sendCommandAndWait, stopPolling, startPolling]);
+
+  // ── Upload sensor readings to backend every 30 s when connected ───────────
+  useEffect(() => {
+    if (!isConnected || !vehicleId || !authToken) return;
+
+    const sensorMap = {
+      rpm: 'rpm', speed: 'speed', coolant_temp: 'coolant_temp',
+      throttle: 'throttle_position', engine_load: 'engine_load',
+      voltage: 'battery_voltage', intake_temp: 'intake_temp',
+      fuel_trim: 'fuel_trim', trans_fluid_temp: 'trans_fluid_temp',
+      trans_gear: 'trans_gear', ambient_temp: 'ambient_temp',
+      fuel_type: 'fuel_type', fuel_rail_pressure: 'fuel_rail_pressure',
+    };
+
+    const upload = async () => {
+      const snapshot = sensorsRef.current;
+      if (!snapshot || Object.keys(snapshot).length === 0) return;
+
+      const readings = Object.entries(snapshot)
+        .filter(([, v]) => v !== null && v !== undefined)
+        .map(([key, value]) => ({
+          sensor_type: sensorMap[key] || key,
+          value: Number(value),
+          timestamp: new Date().toISOString(),
+        }));
+
+      if (readings.length === 0) return;
+
+      try {
+        await fetch(`${API_URL}/api/sensors/${vehicleId}/readings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+          body: JSON.stringify({ readings }),
+        });
+      } catch (e) {
+        console.warn('[BLE] sensor upload failed:', e.message);
+      }
+    };
+
+    const interval = setInterval(upload, 30000);
+    return () => clearInterval(interval);
+  }, [isConnected, vehicleId, authToken]);
 
   // ── Cleanup on unmount ────────────────────────────────────────────────────
   useEffect(() => {
