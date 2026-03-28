@@ -170,65 +170,29 @@ function ModuleSensorRow({ sensorKey, value, label, unit }) {
 // ---------------------------------------------------------------------------
 
 function ABSCard({ sensors, style }) {
-  // Card-level status: worst threshold sensor + abs_active event
-  const cardStatus = useMemo(() => {
-    const base = worstStatusOf(['wheel_speed_delta', 'brake_pressure'], sensors);
-    const absActive = sensors.abs_active?.value;
-    const speed     = sensors.speed?.value ?? 0;
-    if (absActive === true && speed > 5) {
-      const ORDER = { critical: 3, warn: 2, normal: 1, unknown: 0 };
-      return (ORDER[base] ?? 0) >= ORDER.warn ? base : 'warn';
-    }
-    return base;
-  }, [sensors]);
-
-  const dotColor     = statusColor(cardStatus);
-  const borderColor  = cardStatus === 'critical' ? C.red
-                     : cardStatus === 'warn'     ? C.amber
-                     : C.border;
-
-  // abs_active pill
-  const absActive = sensors.abs_active?.value;
-  const speed     = sensors.speed?.value ?? 0;
-  let pillText  = 'PARKED';
-  let pillColor = C.textMuted;
-  if (speed > 5) {
-    if (absActive === true) { pillText = 'ACTIVE';  pillColor = C.red;   }
-    else                    { pillText = 'NOMINAL'; pillColor = C.green; }
-  }
-
   return (
-    <View style={[MC.card, style, { borderColor }]}>
+    <View style={[MC.card, style, { borderColor: C.border }]}>
       {/* Card header */}
       <View style={MC.header}>
-        <View style={[MC.statusDot, { backgroundColor: dotColor }]} />
+        <View style={[MC.statusDot, { backgroundColor: C.textMuted }]} />
         <Text style={MC.moduleLabel}>ABS MODULE</Text>
-        <Text style={[MC.moduleTag, { color: C.textMuted }]}>ATSH760</Text>
+        <Text style={[MC.moduleTag, { color: C.textMuted }]}>SAE J1979</Text>
       </View>
 
       <View style={MC.divider} />
 
-      {/* abs_active pill row */}
-      <View style={MR.row}>
-        <Text style={MR.label}>ABS STATUS</Text>
-        <View style={[MC.pill, { borderColor: pillColor }]}>
-          <Text style={[MC.pillText, { color: pillColor }]}>{pillText}</Text>
-        </View>
+      {/* OBD2 limitation notice */}
+      <View style={MC.infoBox}>
+        <Text style={MC.infoIcon}>ⓘ</Text>
+        <Text style={MC.infoText}>
+          Standard OBD2 (SAE J1979 Mode 01) does not expose ABS module data.
+          {'\n\n'}
+          ABS wheel speed sensors and brake pressure require manufacturer-specific
+          Mode 22 access (SAE J2190), which varies by brand and vehicle.
+          {'\n\n'}
+          A dedicated scan tool or brand-specific adapter is required.
+        </Text>
       </View>
-
-      {/* bar rows */}
-      <ModuleSensorRow
-        sensorKey="wheel_speed_delta"
-        value={sensors.wheel_speed_delta?.value ?? null}
-        label="WHEEL Δ"
-        unit="km/h"
-      />
-      <ModuleSensorRow
-        sensorKey="brake_pressure"
-        value={sensors.brake_pressure?.value ?? null}
-        label="BRAKE PRESS"
-        unit="%"
-      />
     </View>
   );
 }
@@ -238,9 +202,12 @@ function ABSCard({ sensors, style }) {
 // ---------------------------------------------------------------------------
 
 function TransmissionCard({ sensors, style }) {
-  // Card status excludes gear_position (no threshold)
+  // Only use PIDs with real OBD2 mappings:
+  //   trans_fluid_temp  ← Mode 01 PID 0x88 (extended, vehicle-dependent)
+  //   trans_actual_gear ← Mode 01 PID 0xA4 (extended, vehicle-dependent)
+  //   gear_position     ← fallback from sensor stream when extended PIDs unavailable
   const cardStatus = useMemo(() =>
-    worstStatusOf(['trans_fluid_temp', 'slip_rpm', 'line_pressure'], sensors)
+    worstStatusOf(['trans_fluid_temp'], sensors)
   , [sensors]);
 
   const dotColor    = statusColor(cardStatus);
@@ -248,7 +215,13 @@ function TransmissionCard({ sensors, style }) {
                     : cardStatus === 'warn'     ? C.amber
                     : C.border;
 
-  const gearDisplay = formatGear(sensors.gear_position?.value ?? null);
+  // Prefer trans_actual_gear (PID 0xA4) over gear_position (mock stream)
+  const gearDisplay = formatGear(
+    sensors.trans_actual_gear?.value ?? sensors.gear_position?.value ?? null
+  );
+
+  const fluidTempValue  = sensors.trans_fluid_temp?.value ?? null;
+  const hasExtendedData = fluidTempValue != null || sensors.trans_actual_gear?.value != null;
 
   return (
     <View style={[MC.card, style, { borderColor }]}>
@@ -256,38 +229,37 @@ function TransmissionCard({ sensors, style }) {
       <View style={MC.header}>
         <View style={[MC.statusDot, { backgroundColor: dotColor }]} />
         <Text style={MC.moduleLabel}>TRANSMISSION</Text>
-        <Text style={[MC.moduleTag, { color: C.textMuted }]}>ATSH7E1</Text>
+        <Text style={[MC.moduleTag, { color: C.textMuted }]}>PID 0x88/0xA4</Text>
       </View>
 
       <View style={MC.divider} />
 
-      {/* bar rows */}
+      {/* Fluid temp — from extended PID 0x88 */}
       <ModuleSensorRow
         sensorKey="trans_fluid_temp"
-        value={sensors.trans_fluid_temp?.value ?? null}
+        value={fluidTempValue}
         label="FLUID TEMP"
         unit="°C"
       />
-      <ModuleSensorRow
-        sensorKey="slip_rpm"
-        value={sensors.slip_rpm?.value ?? null}
-        label="CONV SLIP"
-        unit="rpm"
-      />
-      <ModuleSensorRow
-        sensorKey="line_pressure"
-        value={sensors.line_pressure?.value ?? null}
-        label="LINE PRESS"
-        unit="psi"
-      />
 
-      {/* Gear position — text only, no bar */}
+      {/* Actual gear — from extended PID 0xA4 */}
       <View style={MR.row}>
         <Text style={MR.label}>GEAR</Text>
         <View style={MR.right}>
           <Text style={MC.gearValue}>{gearDisplay}</Text>
         </View>
       </View>
+
+      {/* Extended PID note */}
+      {!hasExtendedData && (
+        <View style={[MC.infoBox, { marginTop: 6 }]}>
+          <Text style={MC.infoIcon}>ⓘ</Text>
+          <Text style={MC.infoText}>
+            Fluid temp and gear position use extended PIDs (0x88, 0xA4).
+            Not all vehicles respond — probed on BLE connect.
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -690,6 +662,16 @@ const MC = StyleSheet.create({
   pillText: { fontSize: 8, fontWeight: '800', letterSpacing: 1.5 },
   gearValue: {
     color: C.textPrimary, fontSize: 22, fontWeight: '800', letterSpacing: -0.5,
+  },
+  infoBox: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    gap: 8, paddingVertical: 8,
+    borderTopWidth: 1, borderTopColor: '#161616',
+  },
+  infoIcon: { color: '#404040', fontSize: 12, lineHeight: 18 },
+  infoText: {
+    flex: 1, color: '#404040', fontSize: 10,
+    lineHeight: 15, letterSpacing: 0.2,
   },
 });
 

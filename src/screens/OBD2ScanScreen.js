@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
 import useBLEManager from '../hooks/useBLEManager';
 import BLEDevicePicker from '../components/BLEDevicePicker';
-import { initELM327, pollAllPIDs } from '../utils/OBD2Protocol';
+import { initELM327, pollAllPIDs, requestDTCs, requestPendingDTCs } from '../utils/OBD2Protocol';
 
 const C = {
   bg: '#080808', surface: '#1A1A1A', border: '#2A2A2A',
@@ -62,6 +62,7 @@ export default function OBD2ScanScreen({ navigation }) {
 
   const [scanning, setScanning]         = useState(false);
   const [dtcs, setDtcs]                 = useState([]);
+  const [bleDtcCodes, setBleDtcCodes]   = useState([]);  // live codes from Mode 03/07
   const [scanned, setScanned]           = useState(false);
   const [error, setError]               = useState(null);
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -111,6 +112,16 @@ export default function OBD2ScanScreen({ navigation }) {
       }
       setAdapterVersion(ver);
       setInitError(null);
+
+      // Initial DTC read — Mode 03 (stored) + Mode 07 (pending)
+      const [stored, pending] = await Promise.all([
+        requestDTCs(sendCommand),
+        requestPendingDTCs(sendCommand),
+      ]);
+      if (!cancelled) {
+        const all = [...stored, ...pending];
+        setBleDtcCodes(all);
+      }
 
       // Poll all PIDs every 2s
       pollIntervalRef.current = setInterval(async () => {
@@ -352,6 +363,35 @@ export default function OBD2ScanScreen({ navigation }) {
                 );
               })
             )}
+          </>
+        )}
+
+        {/* Live BLE DTC codes from Mode 03/07 */}
+        {bleDtcCodes.length > 0 && (
+          <>
+            <Text style={[S.sectionLabel, { marginTop: 16 }]}>
+              {`LIVE BLE CODES · MODE 03/07 · ${bleDtcCodes.length}`}
+            </Text>
+            {bleDtcCodes.map((code, i) => (
+              <TouchableOpacity
+                key={`ble-${code}-${i}`}
+                style={S.dtcRow}
+                onPress={() => navigation.navigate('DTCDetail', { code })}
+                activeOpacity={0.75}
+              >
+                <View style={[S.dtcBar, { backgroundColor: C.amber }]} />
+                <View style={S.dtcBody}>
+                  <View style={S.dtcTopRow}>
+                    <Text style={S.dtcCode}>{code}</Text>
+                    <View style={[S.sevBadge, { borderColor: C.amber }]}>
+                      <Text style={[S.sevText, { color: C.amber }]}>BLE LIVE</Text>
+                    </View>
+                  </View>
+                  <Text style={S.dtcDesc}>Read directly from ECU via OBD2 Mode 03/07</Text>
+                </View>
+                <Text style={S.dtcArrow}>›</Text>
+              </TouchableOpacity>
+            ))}
           </>
         )}
 

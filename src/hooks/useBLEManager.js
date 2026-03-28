@@ -23,5 +23,11 @@ export default function useBLEManager({ enabled = false } = {}) {
     readSensorData: async () => null,
     requestManualScan: () => {},
     clearLastDTC: () => {},
+    // DTC read — populated by OBD2ScanScreen after initELM327 succeeds.
+    // In v1.1 these will be driven by the native BLE event loop.
+    dtcCodes: [],
+    requestDTCs: async () => [],
+    requestPendingDTCs: async () => [],
+    clearDTCs: async () => false,
   };
 }
