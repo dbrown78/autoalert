@@ -169,15 +169,6 @@ function ModuleSensorRow({ sensorKey, value, label, unit }) {
 // ABSCard — honest OBD2 limitation messaging + chassis DTC codes
 // ---------------------------------------------------------------------------
 
-<<<<<<< Updated upstream
-function ABSCard({ sensors, dtcCodes = [], style }) {
-  const chassisCodes = (dtcCodes ?? []).filter(c => c.startsWith('C'));
-
-  return (
-    <View style={[MC.card, style, { borderColor: chassisCodes.length > 0 ? C.amber : C.border }]}>
-      <View style={MC.header}>
-        <View style={[MC.statusDot, { backgroundColor: chassisCodes.length > 0 ? C.amber : C.textMuted }]} />
-=======
 function ABSCard({ chassisDtcs = [], style }) {
   const hasChassisFaults = chassisDtcs.length > 0;
   const borderColor = hasChassisFaults ? C.amber : C.border;
@@ -187,29 +178,11 @@ function ABSCard({ chassisDtcs = [], style }) {
     <View style={[MC.card, style, { borderColor }]}>
       <View style={MC.header}>
         <View style={[MC.statusDot, { backgroundColor: dotColor }]} />
->>>>>>> Stashed changes
         <Text style={MC.moduleLabel}>ABS / TRACTION CONTROL</Text>
       </View>
 
       <View style={MC.divider} />
 
-<<<<<<< Updated upstream
-      <Text style={{ color: C.textMuted, fontSize: 10, lineHeight: 15, marginBottom: 8 }}>
-        Standard OBD2 (SAE J1979) does not expose ABS module data directly.
-        Chassis DTCs (C-codes) from your vehicle's DTC scan will appear here
-        if any are detected.
-      </Text>
-
-      {chassisCodes.length > 0 && (
-        <View style={{ marginTop: 4 }}>
-          <Text style={{ color: C.amber, fontSize: 9, fontWeight: '800', letterSpacing: 1.5, marginBottom: 6 }}>
-            CHASSIS FAULT CODES
-          </Text>
-          {chassisCodes.map(code => (
-            <Text key={code} style={{ color: C.red, fontSize: 13, fontWeight: '700', letterSpacing: 1, marginBottom: 3 }}>
-              {code}
-            </Text>
-=======
       <Text style={ABS.infoText}>
         Standard OBD2 (SAE J1979) does not expose ABS module data.
         ABS wheel speed sensors require manufacturer-specific Mode 22
@@ -224,7 +197,6 @@ function ABSCard({ chassisDtcs = [], style }) {
               <View style={[ABS.faultDot, { backgroundColor: C.amber }]} />
               <Text style={ABS.faultCode}>{code}</Text>
             </View>
->>>>>>> Stashed changes
           ))}
         </View>
       )}
@@ -336,10 +308,7 @@ export default function TelemetryScreen() {
     connectToDevice,
     disconnect: bleDisconnect,
     dtcCodes,
-<<<<<<< Updated upstream
-=======
     pendingDtcCodes,
->>>>>>> Stashed changes
   } = useBLEManager({ enabled: true });
   const {
     status: safetyStatus,
@@ -578,27 +547,11 @@ export default function TelemetryScreen() {
                 <SensorCard key={key} sensorKey={key} entry={sensors[key]} />
               ))}
 
-<<<<<<< Updated upstream
-              {/* ── ABS Module Card ── */}
-              {isModuleLoading ? (
-                <SkeletonCard
-                  label="ABS MODULE"
-                  style={{ width: moduleCardWidth }}
-                />
-              ) : (
-                <ABSCard
-                  sensors={sensors}
-                  dtcCodes={dtcCodes}
-                  style={{ width: moduleCardWidth }}
-                />
-              )}
-=======
               {/* ── ABS / Traction Control Card ── */}
               <ABSCard
                 chassisDtcs={(dtcCodes ?? []).filter(c => c.startsWith('C'))}
                 style={{ width: moduleCardWidth }}
               />
->>>>>>> Stashed changes
 
               {/* ── Transmission Card ── */}
               {isModuleLoading ? (
@@ -979,6 +932,26 @@ const S = StyleSheet.create({
   deviceRssi: {
     color: C.textMuted, fontSize: 9, fontWeight: '600', letterSpacing: 0.5,
   },
+
+  // DTC panel
+  dtcPanel: {
+    backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+    padding: 14, marginBottom: 10, gap: 6,
+  },
+  dtcPanelHeader: {
+    color: C.textMuted, fontSize: 8, fontWeight: '800', letterSpacing: 2,
+    marginBottom: 4,
+  },
+  dtcSubHeader: {
+    color: C.textMuted, fontSize: 7, fontWeight: '700', letterSpacing: 1.5,
+    marginTop: 4,
+  },
+  dtcRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  dtcBadge: {
+    borderWidth: 1, borderColor: C.red,
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  dtcBadgeText: { color: C.red, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
 
   // Footer
   footer: {
