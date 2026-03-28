@@ -166,9 +166,10 @@ function ModuleSensorRow({ sensorKey, value, label, unit }) {
 }
 
 // ---------------------------------------------------------------------------
-// ABSCard
+// ABSCard — honest OBD2 limitation messaging + chassis DTC codes
 // ---------------------------------------------------------------------------
 
+<<<<<<< Updated upstream
 function ABSCard({ sensors, dtcCodes = [], style }) {
   const chassisCodes = (dtcCodes ?? []).filter(c => c.startsWith('C'));
 
@@ -176,11 +177,23 @@ function ABSCard({ sensors, dtcCodes = [], style }) {
     <View style={[MC.card, style, { borderColor: chassisCodes.length > 0 ? C.amber : C.border }]}>
       <View style={MC.header}>
         <View style={[MC.statusDot, { backgroundColor: chassisCodes.length > 0 ? C.amber : C.textMuted }]} />
+=======
+function ABSCard({ chassisDtcs = [], style }) {
+  const hasChassisFaults = chassisDtcs.length > 0;
+  const borderColor = hasChassisFaults ? C.amber : C.border;
+  const dotColor    = hasChassisFaults ? C.amber : C.textMuted;
+
+  return (
+    <View style={[MC.card, style, { borderColor }]}>
+      <View style={MC.header}>
+        <View style={[MC.statusDot, { backgroundColor: dotColor }]} />
+>>>>>>> Stashed changes
         <Text style={MC.moduleLabel}>ABS / TRACTION CONTROL</Text>
       </View>
 
       <View style={MC.divider} />
 
+<<<<<<< Updated upstream
       <Text style={{ color: C.textMuted, fontSize: 10, lineHeight: 15, marginBottom: 8 }}>
         Standard OBD2 (SAE J1979) does not expose ABS module data directly.
         Chassis DTCs (C-codes) from your vehicle's DTC scan will appear here
@@ -196,6 +209,22 @@ function ABSCard({ sensors, dtcCodes = [], style }) {
             <Text key={code} style={{ color: C.red, fontSize: 13, fontWeight: '700', letterSpacing: 1, marginBottom: 3 }}>
               {code}
             </Text>
+=======
+      <Text style={ABS.infoText}>
+        Standard OBD2 (SAE J1979) does not expose ABS module data.
+        ABS wheel speed sensors require manufacturer-specific Mode 22
+        commands that vary by make and model.
+      </Text>
+
+      {hasChassisFaults && (
+        <View style={ABS.faultSection}>
+          <Text style={ABS.faultHeader}>CHASSIS FAULT CODES DETECTED</Text>
+          {chassisDtcs.map((code) => (
+            <View key={code} style={ABS.faultRow}>
+              <View style={[ABS.faultDot, { backgroundColor: C.amber }]} />
+              <Text style={ABS.faultCode}>{code}</Text>
+            </View>
+>>>>>>> Stashed changes
           ))}
         </View>
       )}
@@ -307,6 +336,10 @@ export default function TelemetryScreen() {
     connectToDevice,
     disconnect: bleDisconnect,
     dtcCodes,
+<<<<<<< Updated upstream
+=======
+    pendingDtcCodes,
+>>>>>>> Stashed changes
   } = useBLEManager({ enabled: true });
   const {
     status: safetyStatus,
@@ -545,6 +578,7 @@ export default function TelemetryScreen() {
                 <SensorCard key={key} sensorKey={key} entry={sensors[key]} />
               ))}
 
+<<<<<<< Updated upstream
               {/* ── ABS Module Card ── */}
               {isModuleLoading ? (
                 <SkeletonCard
@@ -558,6 +592,13 @@ export default function TelemetryScreen() {
                   style={{ width: moduleCardWidth }}
                 />
               )}
+=======
+              {/* ── ABS / Traction Control Card ── */}
+              <ABSCard
+                chassisDtcs={(dtcCodes ?? []).filter(c => c.startsWith('C'))}
+                style={{ width: moduleCardWidth }}
+              />
+>>>>>>> Stashed changes
 
               {/* ── Transmission Card ── */}
               {isModuleLoading ? (
@@ -575,6 +616,37 @@ export default function TelemetryScreen() {
                   label="TRANSMISSION"
                   style={{ width: moduleCardWidth }}
                 />
+              )}
+
+              {/* ── BLE DTC codes panel ── */}
+              {bleConnected && (dtcCodes.length > 0 || pendingDtcCodes.length > 0) && (
+                <View style={[S.dtcPanel, { width: '100%' }]}>
+                  <Text style={S.dtcPanelHeader}>FAULT CODES — OBD2 MODE 03/07</Text>
+                  {dtcCodes.length > 0 && (
+                    <>
+                      <Text style={S.dtcSubHeader}>STORED</Text>
+                      <View style={S.dtcRow}>
+                        {dtcCodes.map(code => (
+                          <View key={code} style={S.dtcBadge}>
+                            <Text style={S.dtcBadgeText}>{code}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </>
+                  )}
+                  {pendingDtcCodes.length > 0 && (
+                    <>
+                      <Text style={[S.dtcSubHeader, { color: C.amber }]}>PENDING</Text>
+                      <View style={S.dtcRow}>
+                        {pendingDtcCodes.map(code => (
+                          <View key={code} style={[S.dtcBadge, { borderColor: C.amber }]}>
+                            <Text style={[S.dtcBadgeText, { color: C.amber }]}>{code}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    </>
+                  )}
+                </View>
               )}
 
               {/* Stream info footer card */}
@@ -748,6 +820,23 @@ const MR = StyleSheet.create({
   barTrack: { height: 2, backgroundColor: '#222', overflow: 'hidden' },
   barFill:  { height: 2 },
   statusText: { fontSize: 7, fontWeight: '800', letterSpacing: 1.5 },
+});
+
+// ---------------------------------------------------------------------------
+// ABS info card styles
+// ---------------------------------------------------------------------------
+
+const ABS = StyleSheet.create({
+  infoText: {
+    color: '#555', fontSize: 10, lineHeight: 16, letterSpacing: 0.2,
+  },
+  faultSection: { marginTop: 10, gap: 4 },
+  faultHeader: {
+    color: C.amber, fontSize: 8, fontWeight: '800', letterSpacing: 1.5, marginBottom: 4,
+  },
+  faultRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  faultDot: { width: 5, height: 5 },
+  faultCode: { color: C.amber, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
 });
 
 // ---------------------------------------------------------------------------

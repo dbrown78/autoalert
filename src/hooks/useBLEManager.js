@@ -26,9 +26,36 @@ const INIT_COMMANDS = [
 ];
 
 // ---------------------------------------------------------------------------
+// DTC decode helpers (Mode 03 / 07 / 04)
+// ---------------------------------------------------------------------------
+const decodeDTCByte = (byte1, byte2) => {
+  const types = ['P', 'C', 'B', 'U'];
+  const type = types[(byte1 & 0xC0) >> 6];
+  const code = ((byte1 & 0x3F) << 8 | byte2).toString(16).padStart(4, '0').toUpperCase();
+  return `${type}${code}`;
+};
+
+const parseDTCResponse = (rawResponse, expectedHeader) => {
+  const dtcs = [];
+  const hex = rawResponse.replace(/\s/g, '').replace('>', '').toUpperCase();
+  const header = expectedHeader.toUpperCase();
+  const idx = hex.indexOf(header);
+  if (idx === -1) return dtcs;
+  const dataHex = hex.slice(idx + header.length);
+  for (let i = 0; i + 3 < dataHex.length; i += 4) {
+    const b1 = parseInt(dataHex.substring(i, i + 2), 16);
+    const b2 = parseInt(dataHex.substring(i + 2, i + 4), 16);
+    if (b1 === 0 && b2 === 0) continue; // padding
+    dtcs.push(decodeDTCByte(b1, b2));
+  }
+  return dtcs;
+};
+
+// ---------------------------------------------------------------------------
 // SAE J1979 Mode 01 PID map
 // ---------------------------------------------------------------------------
 const PID_MAP = {
+<<<<<<< Updated upstream
   '010C': { name: 'rpm',          decode: (d) => (d[0] * 256 + d[1]) / 4 },
   '010D': { name: 'speed',        decode: (d) => d[0] },
   '0105': { name: 'coolant_temp', decode: (d) => d[0] - 40 },
@@ -42,6 +69,22 @@ const PID_MAP = {
   '0146': { name: 'ambient_temp',      decode: (d) => d[0] - 40 },
   '0151': { name: 'fuel_type',         decode: (d) => d[0] },
   '0123': { name: 'fuel_rail_pressure', decode: (d) => (256 * d[0] + d[1]) * 10 },
+=======
+  '010C': { name: 'rpm',             decode: (d) => (d[0] * 256 + d[1]) / 4 },
+  '010D': { name: 'speed',           decode: (d) => d[0] },
+  '0105': { name: 'coolant_temp',    decode: (d) => d[0] - 40 },
+  '0111': { name: 'throttle',        decode: (d) => Math.round(d[0] * 100 / 255) },
+  '0104': { name: 'engine_load',     decode: (d) => Math.round(d[0] * 100 / 255) },
+  '0142': { name: 'voltage',         decode: (d) => (d[0] * 256 + d[1]) / 1000 },
+  '010F': { name: 'intake_temp',     decode: (d) => d[0] - 40 },
+  '0106': { name: 'fuel_trim',       decode: (d) => ((d[0] - 128) * 100 / 128) },
+  // Extended PIDs — many vehicles return NO DATA; null is stored on failure
+  '0188': { name: 'transFluidTemp',    decode: (d) => d[0] - 40 },
+  '01A4': { name: 'transGear',         decode: (d) => d[0] & 0x0F },
+  '0146': { name: 'ambientTemp',       decode: (d) => d[0] - 40 },
+  '0151': { name: 'fuelType',          decode: (d) => d[0] },
+  '0123': { name: 'fuelRailPressure',  decode: (d) => (d[0] * 256 + d[1]) * 10 },
+>>>>>>> Stashed changes
 };
 
 const PID_LIST = Object.keys(PID_MAP);
@@ -72,13 +115,21 @@ export default function useBLEManager({ enabled = false } = {}) {
   const [dtcCodes, setDtcCodes]           = useState([]);
   const [pendingDtcCodes, setPendingDtcCodes] = useState([]);
 
+  const [dtcCodes, setDtcCodes]               = useState([]);
+  const [pendingDtcCodes, setPendingDtcCodes] = useState([]);
+
   const deviceRef         = useRef(null);
   const writeCharRef      = useRef(null);
   const notifySubRef      = useRef(null);
   const pollIntervalRef   = useRef(null);
   const responseBufferRef = useRef('');
+<<<<<<< Updated upstream
   const pidIndexRef           = useRef(0);
   const pendingResolverRef    = useRef(null);
+=======
+  const pidIndexRef       = useRef(0);
+  const pendingRef        = useRef(null); // one-shot command resolver
+>>>>>>> Stashed changes
 
   // ── Hardware state monitor ────────────────────────────────────────────────
   useEffect(() => {
@@ -158,6 +209,7 @@ export default function useBLEManager({ enabled = false } = {}) {
     await writeCharRef.current.writeWithResponse(encoded);
   }, []);
 
+<<<<<<< Updated upstream
   // ── One-shot command (sends + waits for '>' terminated response) ─────────
   const sendCommandAndWait = useCallback((command, timeoutMs = 3000) => {
     return new Promise(async (resolve, reject) => {
@@ -179,6 +231,67 @@ export default function useBLEManager({ enabled = false } = {}) {
     });
   }, [sendCommand]);
 
+=======
+  // ── One-shot command with response ───────────────────────────────────────
+  // Stops the polling loop, sends a command, waits for '>' response, restores
+  // polling. Caller must not hold pollIntervalRef already stopped.
+  const sendAndWait = useCallback((command, timeoutMs = 3000) => {
+    if (!writeCharRef.current) return Promise.reject(new Error('Not connected'));
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        pendingRef.current = null;
+        reject(new Error(`OBD2 command timeout: ${command.trim()}`));
+      }, timeoutMs);
+      pendingRef.current = {
+        resolve: (raw) => { clearTimeout(timer); resolve(raw); },
+      };
+      sendCommand(command).catch((err) => {
+        clearTimeout(timer);
+        pendingRef.current = null;
+        reject(err);
+      });
+    });
+  }, [sendCommand]);
+
+  // ── DTC commands ──────────────────────────────────────────────────────────
+  const requestDTCs = useCallback(async () => {
+    if (!writeCharRef.current) throw new Error('Not connected');
+    try {
+      const raw = await sendAndWait('03\r');
+      const codes = parseDTCResponse(raw, '43');
+      setDtcCodes(codes);
+      return codes;
+    } catch (err) {
+      console.warn('[BLE] requestDTCs:', err.message);
+      return [];
+    }
+  }, [sendAndWait]);
+
+  const requestPendingDTCs = useCallback(async () => {
+    if (!writeCharRef.current) throw new Error('Not connected');
+    try {
+      const raw = await sendAndWait('07\r');
+      const codes = parseDTCResponse(raw, '47');
+      setPendingDtcCodes(codes);
+      return codes;
+    } catch (err) {
+      console.warn('[BLE] requestPendingDTCs:', err.message);
+      return [];
+    }
+  }, [sendAndWait]);
+
+  const clearDTCs = useCallback(async () => {
+    if (!writeCharRef.current) throw new Error('Not connected');
+    try {
+      await sendAndWait('04\r');
+      setDtcCodes([]);
+      setPendingDtcCodes([]);
+    } catch (err) {
+      console.warn('[BLE] clearDTCs:', err.message);
+    }
+  }, [sendAndWait]);
+
+>>>>>>> Stashed changes
   // ── Polling loop ──────────────────────────────────────────────────────────
   const stopPolling = useCallback(() => {
     if (pollIntervalRef.current) {
@@ -226,6 +339,7 @@ export default function useBLEManager({ enabled = false } = {}) {
               if (responseBufferRef.current.includes('>')) {
                 const raw = responseBufferRef.current;
                 responseBufferRef.current = '';
+<<<<<<< Updated upstream
                 // If a one-shot command is waiting, resolve it instead of polling
                 if (pendingResolverRef.current) {
                   const resolve = pendingResolverRef.current;
@@ -239,6 +353,22 @@ export default function useBLEManager({ enabled = false } = {}) {
                 if (value !== null) {
                   const sensorName = PID_MAP[currentPid].name;
                   setSensors((prev) => ({ ...prev, [sensorName]: value }));
+=======
+
+                if (pendingRef.current) {
+                  // One-shot command (DTC read, etc.) — route to awaiting caller
+                  pendingRef.current.resolve(raw);
+                  pendingRef.current = null;
+                } else {
+                  // Normal polling response
+                  const currentPid =
+                    PID_LIST[(pidIndexRef.current - 1) % PID_LIST.length];
+                  const value = parseResponse(raw, currentPid);
+                  if (value !== null) {
+                    const sensorName = PID_MAP[currentPid].name;
+                    setSensors((prev) => ({ ...prev, [sensorName]: value }));
+                  }
+>>>>>>> Stashed changes
                 }
               }
             });
@@ -257,13 +387,25 @@ export default function useBLEManager({ enabled = false } = {}) {
         setSensors({});
       });
 
-      // ELM327 boot sequence, then start polling
+      // ELM327 boot sequence
       for (const cmd of INIT_COMMANDS) {
         await sendCommand(cmd);
         await new Promise((r) => setTimeout(r, 200));
       }
 
       setIsConnected(true);
+
+      // Fetch stored + pending DTCs before starting the polling loop
+      try {
+        const raw03 = await sendAndWait('03\r', 3000);
+        setDtcCodes(parseDTCResponse(raw03, '43'));
+      } catch (e) { console.warn('[BLE] init DTC read:', e.message); }
+
+      try {
+        const raw07 = await sendAndWait('07\r', 3000);
+        setPendingDtcCodes(parseDTCResponse(raw07, '47'));
+      } catch (e) { console.warn('[BLE] init pending DTC read:', e.message); }
+
       startPolling();
     } catch (err) {
       setError(err.message);
@@ -271,7 +413,7 @@ export default function useBLEManager({ enabled = false } = {}) {
     } finally {
       setIsConnecting(false);
     }
-  }, [stopScan, parseResponse, sendCommand, startPolling, stopPolling]);
+  }, [stopScan, parseResponse, sendCommand, sendAndWait, startPolling, stopPolling]);
 
   // ── Disconnect ────────────────────────────────────────────────────────────
   const disconnect = useCallback(async () => {
@@ -384,7 +526,11 @@ export default function useBLEManager({ enabled = false } = {}) {
     connectToDevice,
     disconnect,
 
+<<<<<<< Updated upstream
     // ── DTC commands ──
+=======
+    // ── DTC state + commands ──
+>>>>>>> Stashed changes
     dtcCodes,
     pendingDtcCodes,
     requestDTCs,
