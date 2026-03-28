@@ -25,7 +25,9 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "keychain-access-groups": ["$(AppIdentifierPrefix)com.mhlabs201.odin"]
+        "keychain-access-groups": [
+          "$(AppIdentifierPrefix)com.mhlabs201.odin"
+        ]
       }
     },
     "android": {
@@ -58,7 +60,8 @@
             "newArchEnabled": false
           }
         }
-      ]
+      ],
+      "react-native-ble-plx"
     ],
     "extra": {
       "eas": {

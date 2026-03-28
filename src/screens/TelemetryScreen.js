@@ -325,7 +325,18 @@ export default function TelemetryScreen() {
 
   const [streamEnabled, setStreamEnabled] = useState(false);
   const { sensorData: streamSensors, isStreaming: streaming, streamError: error } = useSensorStream({ enabled: streamEnabled });
-  const { bleState, sensors: bleSensors, isSupported: bleSupported } = useBLEManager({ enabled: true });
+  const {
+    bleState,
+    sensors: bleSensors,
+    isSupported: bleSupported,
+    isScanning: bleScanning,
+    isConnecting: bleConnecting,
+    nearbyDevices,
+    error: bleError,
+    startScan,
+    connectToDevice,
+    disconnect: bleDisconnect,
+  } = useBLEManager({ enabled: true });
   const {
     status: safetyStatus,
     reason: safetyReason,
@@ -445,12 +456,36 @@ export default function TelemetryScreen() {
         </View>
       ) : (
         <>
-          {/* ── Stream control button ── */}
+          {/* ── Stream / BLE control bar ── */}
           <View style={S.controlBar}>
             {bleConnected ? (
-              <View style={[S.streamBtn, S.streamBtnBLE]}>
+              <TouchableOpacity
+                onPress={bleDisconnect}
+                style={[S.streamBtn, S.streamBtnBLE]}
+                activeOpacity={0.75}
+              >
                 <Text style={[S.streamBtnText, { color: C.accent }]}>⬡  BLE ADAPTER CONNECTED</Text>
+              </TouchableOpacity>
+            ) : bleConnecting ? (
+              <View style={[S.streamBtn, S.streamBtnBLE]}>
+                <ActivityIndicator size="small" color={C.accent} style={{ marginRight: 8 }} />
+                <Text style={[S.streamBtnText, { color: C.textMuted }]}>CONNECTING…</Text>
               </View>
+            ) : bleSupported ? (
+              <TouchableOpacity
+                onPress={bleScanning ? () => {} : startScan}
+                style={[S.streamBtn, S.streamBtnBLEScan]}
+                activeOpacity={0.75}
+              >
+                {bleScanning ? (
+                  <>
+                    <ActivityIndicator size="small" color={C.accent} style={{ marginRight: 8 }} />
+                    <Text style={[S.streamBtnText, { color: C.accent }]}>SCANNING…</Text>
+                  </>
+                ) : (
+                  <Text style={[S.streamBtnText, { color: C.accent }]}>⬡  SCAN FOR ADAPTER</Text>
+                )}
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 onPress={() => setStreamEnabled(v => !v)}
@@ -484,6 +519,34 @@ export default function TelemetryScreen() {
               <Text style={S.disconnectText}>
                 ADAPTER DISCONNECTED — SHOWING LAST KNOWN READINGS
               </Text>
+            </View>
+          )}
+
+          {/* ── BLE nearby devices list ── */}
+          {!bleConnected && nearbyDevices.length > 0 && (
+            <View style={S.deviceList}>
+              <Text style={S.deviceListHeader}>NEARBY ADAPTERS</Text>
+              {nearbyDevices.map((d) => (
+                <TouchableOpacity
+                  key={d.id}
+                  onPress={() => connectToDevice(d.id)}
+                  style={S.deviceRow}
+                  activeOpacity={0.7}
+                >
+                  <View style={S.deviceRowLeft}>
+                    <View style={S.deviceDot} />
+                    <Text style={S.deviceName}>{d.name}</Text>
+                  </View>
+                  <Text style={S.deviceRssi}>{d.rssi} dBm</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* ── BLE error banner ── */}
+          {bleError && !bleConnected && (
+            <View style={S.errorBanner}>
+              <Text style={S.errorBannerText}>BLE — {bleError}</Text>
             </View>
           )}
 
@@ -770,10 +833,11 @@ const S = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1,
   },
-  streamBtnStart: { borderColor: C.green, backgroundColor: 'rgba(76,175,130,0.06)' },
-  streamBtnStop:  { borderColor: C.red,   backgroundColor: 'rgba(208,69,58,0.06)'  },
-  streamBtnBLE:   { borderColor: C.accent, backgroundColor: 'rgba(192,192,192,0.04)' },
-  streamBtnText:  { fontSize: 11, fontWeight: '800', letterSpacing: 2 },
+  streamBtnStart:   { borderColor: C.green,  backgroundColor: 'rgba(76,175,130,0.06)' },
+  streamBtnStop:    { borderColor: C.red,    backgroundColor: 'rgba(208,69,58,0.06)'  },
+  streamBtnBLE:     { borderColor: C.accent, backgroundColor: 'rgba(192,192,192,0.04)', flexDirection: 'row' },
+  streamBtnBLEScan: { borderColor: '#3A3A3A', backgroundColor: 'rgba(192,192,192,0.03)', flexDirection: 'row' },
+  streamBtnText:    { fontSize: 11, fontWeight: '800', letterSpacing: 2 },
   pollBadge: {
     paddingHorizontal: 10, paddingVertical: 11,
     borderWidth: 1, borderColor: C.border,
@@ -833,6 +897,31 @@ const S = StyleSheet.create({
   emptySub: {
     color: '#404040', fontSize: 11, letterSpacing: 0.5,
     textAlign: 'center', lineHeight: 18,
+  },
+
+  // BLE device list
+  deviceList: {
+    borderBottomWidth: 1, borderBottomColor: C.border,
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: '#0D0D0D',
+  },
+  deviceListHeader: {
+    color: '#404040', fontSize: 8, fontWeight: '800',
+    letterSpacing: 2, marginBottom: 8,
+  },
+  deviceRow: {
+    flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 9,
+    borderTopWidth: 1, borderTopColor: '#161616',
+  },
+  deviceRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  deviceDot: { width: 5, height: 5, backgroundColor: C.accent },
+  deviceName: {
+    color: C.textPrimary, fontSize: 12, fontWeight: '700', letterSpacing: 0.5,
+  },
+  deviceRssi: {
+    color: C.textMuted, fontSize: 9, fontWeight: '600', letterSpacing: 0.5,
   },
 
   // Footer
