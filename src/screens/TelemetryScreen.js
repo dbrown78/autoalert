@@ -169,66 +169,36 @@ function ModuleSensorRow({ sensorKey, value, label, unit }) {
 // ABSCard
 // ---------------------------------------------------------------------------
 
-function ABSCard({ sensors, style }) {
-  // Card-level status: worst threshold sensor + abs_active event
-  const cardStatus = useMemo(() => {
-    const base = worstStatusOf(['wheel_speed_delta', 'brake_pressure'], sensors);
-    const absActive = sensors.abs_active?.value;
-    const speed     = sensors.speed?.value ?? 0;
-    if (absActive === true && speed > 5) {
-      const ORDER = { critical: 3, warn: 2, normal: 1, unknown: 0 };
-      return (ORDER[base] ?? 0) >= ORDER.warn ? base : 'warn';
-    }
-    return base;
-  }, [sensors]);
-
-  const dotColor     = statusColor(cardStatus);
-  const borderColor  = cardStatus === 'critical' ? C.red
-                     : cardStatus === 'warn'     ? C.amber
-                     : C.border;
-
-  // abs_active pill
-  const absActive = sensors.abs_active?.value;
-  const speed     = sensors.speed?.value ?? 0;
-  let pillText  = 'PARKED';
-  let pillColor = C.textMuted;
-  if (speed > 5) {
-    if (absActive === true) { pillText = 'ACTIVE';  pillColor = C.red;   }
-    else                    { pillText = 'NOMINAL'; pillColor = C.green; }
-  }
+function ABSCard({ sensors, dtcCodes = [], style }) {
+  const chassisCodes = (dtcCodes ?? []).filter(c => c.startsWith('C'));
 
   return (
-    <View style={[MC.card, style, { borderColor }]}>
-      {/* Card header */}
+    <View style={[MC.card, style, { borderColor: chassisCodes.length > 0 ? C.amber : C.border }]}>
       <View style={MC.header}>
-        <View style={[MC.statusDot, { backgroundColor: dotColor }]} />
-        <Text style={MC.moduleLabel}>ABS MODULE</Text>
-        <Text style={[MC.moduleTag, { color: C.textMuted }]}>ATSH760</Text>
+        <View style={[MC.statusDot, { backgroundColor: chassisCodes.length > 0 ? C.amber : C.textMuted }]} />
+        <Text style={MC.moduleLabel}>ABS / TRACTION CONTROL</Text>
       </View>
 
       <View style={MC.divider} />
 
-      {/* abs_active pill row */}
-      <View style={MR.row}>
-        <Text style={MR.label}>ABS STATUS</Text>
-        <View style={[MC.pill, { borderColor: pillColor }]}>
-          <Text style={[MC.pillText, { color: pillColor }]}>{pillText}</Text>
-        </View>
-      </View>
+      <Text style={{ color: C.textMuted, fontSize: 10, lineHeight: 15, marginBottom: 8 }}>
+        Standard OBD2 (SAE J1979) does not expose ABS module data directly.
+        Chassis DTCs (C-codes) from your vehicle's DTC scan will appear here
+        if any are detected.
+      </Text>
 
-      {/* bar rows */}
-      <ModuleSensorRow
-        sensorKey="wheel_speed_delta"
-        value={sensors.wheel_speed_delta?.value ?? null}
-        label="WHEEL Δ"
-        unit="km/h"
-      />
-      <ModuleSensorRow
-        sensorKey="brake_pressure"
-        value={sensors.brake_pressure?.value ?? null}
-        label="BRAKE PRESS"
-        unit="%"
-      />
+      {chassisCodes.length > 0 && (
+        <View style={{ marginTop: 4 }}>
+          <Text style={{ color: C.amber, fontSize: 9, fontWeight: '800', letterSpacing: 1.5, marginBottom: 6 }}>
+            CHASSIS FAULT CODES
+          </Text>
+          {chassisCodes.map(code => (
+            <Text key={code} style={{ color: C.red, fontSize: 13, fontWeight: '700', letterSpacing: 1, marginBottom: 3 }}>
+              {code}
+            </Text>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -336,6 +306,7 @@ export default function TelemetryScreen() {
     startScan,
     connectToDevice,
     disconnect: bleDisconnect,
+    dtcCodes,
   } = useBLEManager({ enabled: true });
   const {
     status: safetyStatus,
@@ -580,14 +551,10 @@ export default function TelemetryScreen() {
                   label="ABS MODULE"
                   style={{ width: moduleCardWidth }}
                 />
-              ) : hasABS ? (
+              ) : (
                 <ABSCard
                   sensors={sensors}
-                  style={{ width: moduleCardWidth }}
-                />
-              ) : (
-                <NotDetectedCard
-                  label="ABS MODULE"
+                  dtcCodes={dtcCodes}
                   style={{ width: moduleCardWidth }}
                 />
               )}

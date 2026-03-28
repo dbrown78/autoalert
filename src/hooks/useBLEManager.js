@@ -35,8 +35,13 @@ const PID_MAP = {
   '0111': { name: 'throttle',     decode: (d) => Math.round(d[0] * 100 / 255) },
   '0104': { name: 'engine_load',  decode: (d) => Math.round(d[0] * 100 / 255) },
   '0142': { name: 'voltage',      decode: (d) => (d[0] * 256 + d[1]) / 1000 },
-  '010F': { name: 'intake_temp',  decode: (d) => d[0] - 40 },
-  '0106': { name: 'fuel_trim',    decode: (d) => ((d[0] - 128) * 100 / 128) },
+  '010F': { name: 'intake_temp',       decode: (d) => d[0] - 40 },
+  '0106': { name: 'fuel_trim',         decode: (d) => ((d[0] - 128) * 100 / 128) },
+  '0188': { name: 'trans_fluid_temp',  decode: (d) => d[0] - 40 },
+  '01A4': { name: 'trans_gear',        decode: (d) => d[0] & 0x0F },
+  '0146': { name: 'ambient_temp',      decode: (d) => d[0] - 40 },
+  '0151': { name: 'fuel_type',         decode: (d) => d[0] },
+  '0123': { name: 'fuel_rail_pressure', decode: (d) => (256 * d[0] + d[1]) * 10 },
 };
 
 const PID_LIST = Object.keys(PID_MAP);
@@ -64,13 +69,16 @@ export default function useBLEManager({ enabled = false } = {}) {
   const [sensors, setSensors]         = useState({});
   const [error, setError]             = useState(null);
   const [nearbyDevices, setNearbyDevices] = useState([]);
+  const [dtcCodes, setDtcCodes]           = useState([]);
+  const [pendingDtcCodes, setPendingDtcCodes] = useState([]);
 
   const deviceRef         = useRef(null);
   const writeCharRef      = useRef(null);
   const notifySubRef      = useRef(null);
   const pollIntervalRef   = useRef(null);
   const responseBufferRef = useRef('');
-  const pidIndexRef       = useRef(0);
+  const pidIndexRef           = useRef(0);
+  const pendingResolverRef    = useRef(null);
 
   // ── Hardware state monitor ────────────────────────────────────────────────
   useEffect(() => {
@@ -150,6 +158,27 @@ export default function useBLEManager({ enabled = false } = {}) {
     await writeCharRef.current.writeWithResponse(encoded);
   }, []);
 
+  // ── One-shot command (sends + waits for '>' terminated response) ─────────
+  const sendCommandAndWait = useCallback((command, timeoutMs = 3000) => {
+    return new Promise(async (resolve, reject) => {
+      const timer = setTimeout(() => {
+        pendingResolverRef.current = null;
+        reject(new Error(`Command timeout: ${command.trim()}`));
+      }, timeoutMs);
+      pendingResolverRef.current = (raw) => {
+        clearTimeout(timer);
+        resolve(raw);
+      };
+      try {
+        await sendCommand(command);
+      } catch (e) {
+        clearTimeout(timer);
+        pendingResolverRef.current = null;
+        reject(e);
+      }
+    });
+  }, [sendCommand]);
+
   // ── Polling loop ──────────────────────────────────────────────────────────
   const stopPolling = useCallback(() => {
     if (pollIntervalRef.current) {
@@ -197,6 +226,13 @@ export default function useBLEManager({ enabled = false } = {}) {
               if (responseBufferRef.current.includes('>')) {
                 const raw = responseBufferRef.current;
                 responseBufferRef.current = '';
+                // If a one-shot command is waiting, resolve it instead of polling
+                if (pendingResolverRef.current) {
+                  const resolve = pendingResolverRef.current;
+                  pendingResolverRef.current = null;
+                  resolve(raw);
+                  return;
+                }
                 const currentPid =
                   PID_LIST[(pidIndexRef.current - 1) % PID_LIST.length];
                 const value = parseResponse(raw, currentPid);
@@ -249,6 +285,76 @@ export default function useBLEManager({ enabled = false } = {}) {
     setSensors({});
   }, [stopPolling]);
 
+  // ── DTC Helpers ──────────────────────────────────────────────────────────
+  const decodeDTCByte = useCallback((byte1, byte2) => {
+    const types = ['P', 'C', 'B', 'U'];
+    const type = types[(byte1 & 0xC0) >> 6];
+    const code = ((byte1 & 0x3F) << 8 | byte2).toString(16).padStart(4, '0').toUpperCase();
+    return `${type}${code}`;
+  }, []);
+
+  const parseDTCResponse = useCallback((rawResponse, expectedHeader) => {
+    const dtcs = [];
+    try {
+      const cleaned = rawResponse.replace(/[\s>]/g, '');
+      const idx = cleaned.indexOf(expectedHeader);
+      if (idx === -1) return dtcs;
+      const data = cleaned.substring(idx + expectedHeader.length);
+      for (let i = 0; i + 3 < data.length; i += 4) {
+        const b1 = parseInt(data.substring(i, i + 2), 16);
+        const b2 = parseInt(data.substring(i + 2, i + 4), 16);
+        if (isNaN(b1) || isNaN(b2) || (b1 === 0 && b2 === 0)) continue;
+        dtcs.push(decodeDTCByte(b1, b2));
+      }
+    } catch (e) {
+      console.warn('[BLE] DTC parse error:', e);
+    }
+    return dtcs;
+  }, [decodeDTCByte]);
+
+  const requestDTCs = useCallback(async () => {
+    try {
+      stopPolling();
+      const raw = await sendCommandAndWait('03\r', 3000);
+      const codes = parseDTCResponse(raw, '43');
+      setDtcCodes(codes);
+      startPolling();
+      return codes;
+    } catch (e) {
+      console.warn('[BLE] requestDTCs error:', e);
+      startPolling();
+      return [];
+    }
+  }, [sendCommandAndWait, parseDTCResponse, stopPolling, startPolling]);
+
+  const requestPendingDTCs = useCallback(async () => {
+    try {
+      stopPolling();
+      const raw = await sendCommandAndWait('07\r', 3000);
+      const codes = parseDTCResponse(raw, '47');
+      setPendingDtcCodes(codes);
+      startPolling();
+      return codes;
+    } catch (e) {
+      console.warn('[BLE] requestPendingDTCs error:', e);
+      startPolling();
+      return [];
+    }
+  }, [sendCommandAndWait, parseDTCResponse, stopPolling, startPolling]);
+
+  const clearDTCs = useCallback(async () => {
+    try {
+      stopPolling();
+      await sendCommandAndWait('04\r', 3000);
+      setDtcCodes([]);
+      setPendingDtcCodes([]);
+      startPolling();
+    } catch (e) {
+      console.warn('[BLE] clearDTCs error:', e);
+      startPolling();
+    }
+  }, [sendCommandAndWait, stopPolling, startPolling]);
+
   // ── Cleanup on unmount ────────────────────────────────────────────────────
   useEffect(() => {
     return () => {
@@ -277,6 +383,13 @@ export default function useBLEManager({ enabled = false } = {}) {
     stopScan,
     connectToDevice,
     disconnect,
+
+    // ── DTC commands ──
+    dtcCodes,
+    pendingDtcCodes,
+    requestDTCs,
+    requestPendingDTCs,
+    clearDTCs,
 
     // ── Compat stubs (other hooks may call these) ──
     syncing: false,
