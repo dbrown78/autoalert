@@ -289,7 +289,7 @@ function PulseDot() {
 // ---------------------------------------------------------------------------
 
 export default function TelemetryScreen() {
-  const { selectedVehicle } = useAuth();
+  const { selectedVehicle, token } = useAuth();
   const vehicleId = selectedVehicle?.id ?? null;
   const { width: screenWidth } = useWindowDimensions();
   const isNarrow = screenWidth < 375;
@@ -309,7 +309,7 @@ export default function TelemetryScreen() {
     disconnect: bleDisconnect,
     dtcCodes,
     pendingDtcCodes,
-  } = useBLEManager({ enabled: true });
+  } = useBLEManager({ enabled: true, vehicleId, authToken: token });
   const {
     status: safetyStatus,
     reason: safetyReason,
