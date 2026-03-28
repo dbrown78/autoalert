@@ -18,10 +18,8 @@ export function buildPartsLinks(partName, vehicle) {
     ? `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(fullQuery)}&_sacat=6030&LH_ItemCondition=3`
     : `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(partName)}&_sacat=6030`;
 
-  // car-parts.com: keyword + year/make/model filters
-  const carPartsUrl = hasVehicle
-    ? `https://www.car-parts.com/cgi-bin/search.cgi?action=search&part=${encodeURIComponent(partName)}&year=${vehicle.year}&make=${encodeURIComponent(vehicle.make)}&model=${encodeURIComponent(vehicle.model)}`
-    : `https://www.car-parts.com/cgi-bin/search.cgi?action=search&part=${encodeURIComponent(partName)}`;
+  // AutoZone: part search with vehicle context
+  const autoZoneUrl = `https://www.autozone.com/searchresult?searchText=${encodeURIComponent(fullQuery)}`;
 
   return [
     {
@@ -40,9 +38,9 @@ export function buildPartsLinks(partName, vehicle) {
       url: ebayUrl,
     },
     {
-      label: 'car-parts.com',
-      sublabel: 'Used & salvage',
-      url: carPartsUrl,
+      label: 'AutoZone',
+      sublabel: 'Same-day pickup',
+      url: autoZoneUrl,
     },
   ];
 }

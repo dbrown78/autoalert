@@ -1,6 +1,7 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { Platform } from 'react-native';
 import client from '../api/client';
+import { registerPushToken } from '../hooks/usePushToken';
 
 const storage = {
   getItem: async (key) => {
@@ -89,6 +90,7 @@ export const AuthProvider = ({ children }) => {
     setToken(tok);
     await storage.setItem('token', tok);
     await loadSelectedVehicle();
+    registerPushToken(tok).catch(() => {});
   };
 
   const register = async (name, email, password) => {
@@ -131,6 +133,7 @@ export const AuthProvider = ({ children }) => {
         await storage.setItem('refresh_token', res.data.refreshToken);
       }
       await loadSelectedVehicle();
+      registerPushToken(res.data.token).catch(() => {});
       return {};
     } catch (err) {
       const data = err.response?.data;

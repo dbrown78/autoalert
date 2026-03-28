@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import * as Location from 'expo-location';
 import client from '../api/client';
 import CostComparisonCard from '../components/CostComparisonCard';
 import DIYRepairCard from '../components/DIYRepairCard';
@@ -215,7 +216,20 @@ export default function DTCDetailScreen({ route, navigation }) {
 
         <TouchableOpacity
           style={S.emergencyBtn}
-          onPress={() => Linking.openURL('tel:18004357628')}
+          onPress={async () => {
+            try {
+              const { status } = await Location.requestForegroundPermissionsAsync();
+              if (status === 'granted') {
+                const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+                const { latitude: lat, longitude: lon } = loc.coords;
+                Linking.openURL(`https://www.google.com/search?q=roadside+assistance+near+me&near=${lat},${lon}`);
+              } else {
+                Linking.openURL('https://www.google.com/search?q=roadside+assistance+near+me');
+              }
+            } catch {
+              Linking.openURL('https://www.google.com/search?q=roadside+assistance+near+me');
+            }
+          }}
           activeOpacity={0.75}
         >
           <Text style={S.emergencyTxt}>🆘 Roadside Assistance</Text>

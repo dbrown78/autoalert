@@ -82,6 +82,7 @@ app.use('/api/mechanics', lookupLimiter, require('./routes/mechanics'));
 app.use('/api/scans',     require('./routes/scans'));
 app.use('/api/telemetry', require('./routes/telemetry'));
 app.use('/api/foresight', require('./routes/foresight'));
+app.use('/api/alerts',   require('./routes/alerts'));
 app.use('/api/push',      require('./routes/push'));
 app.use('/api/sensors',   sensorRoutes);
 app.use('/api/user',      require('./routes/user'));
