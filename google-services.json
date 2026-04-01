@@ -1,19 +1,23 @@
 {
-  "_comment": "REPLACE THIS FILE with your real google-services.json from Firebase Console (console.firebase.google.com). Create a project, add Android app with package name com.mhlabs201.odin, download google-services.json and replace this file.",
   "project_info": {
-    "project_number": "REPLACE",
-    "project_id": "REPLACE",
-    "storage_bucket": "REPLACE"
+    "project_number": "8199101143",
+    "project_id": "odin-autoalert-d3c60",
+    "storage_bucket": "odin-autoalert-d3c60.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "REPLACE",
-        "android_info": {
+        "mobilesdk_app_id": "1:8199101143:android:db68249ace91181daf2e92",
+        "android_client_info": {
           "package_name": "com.mhlabs201.odin"
         }
       },
-      "api_key": [{ "current_key": "REPLACE" }],
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCv4Fkij5CO0Qo6Y36N7W7-EXak_WtgBD8"
+        }
+      ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": []
