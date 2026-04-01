@@ -12,7 +12,10 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "buildType": "aab"
+      }
     }
   },
   "submit": {
@@ -21,6 +24,10 @@
         "appleId": "elitesellers201@gmail.com",
         "ascAppId": "6760629641",
         "appleTeamId": "C4Y59WB79P"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal"
       }
     }
   }
