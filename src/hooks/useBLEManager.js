@@ -2,8 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { API_URL } from '../api/client';
 import { BleManager, State } from 'react-native-ble-plx';
 import { Platform, PermissionsAndroid } from 'react-native';
-import { Buffer } from 'buffer';
-
 // ---------------------------------------------------------------------------
 // ELM327 BLE UUIDs
 // ---------------------------------------------------------------------------
