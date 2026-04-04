@@ -61,7 +61,10 @@
         "expo-build-properties",
         {
           "ios": {
-            "newArchEnabled": false
+            "newArchEnabled": false,
+            "extraPodspecProps": {
+              "OTHER_CFLAGS": "$(inherited) -Wno-error=return-type"
+            }
           },
           "android": {
             "compileSdkVersion": 35,
