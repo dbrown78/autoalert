@@ -62,7 +62,7 @@
         {
           "ios": {
             "newArchEnabled": false,
-            "extraPodspecProps": {
+            "extraPodfileProperties": {
               "OTHER_CFLAGS": "$(inherited) -Wno-error=return-type"
             }
           },
