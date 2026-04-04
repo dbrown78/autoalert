@@ -61,10 +61,7 @@
         "expo-build-properties",
         {
           "ios": {
-            "newArchEnabled": false,
-            "extraPodfileProperties": {
-              "OTHER_CFLAGS": "$(inherited) -Wno-error=return-type"
-            }
+            "newArchEnabled": false
           },
           "android": {
             "compileSdkVersion": 35,
@@ -74,7 +71,8 @@
           }
         }
       ],
-      "react-native-ble-plx"
+      "react-native-ble-plx",
+      "./plugins/withSuppressReturnTypeWarning"
     ],
     "extra": {
       "eas": {
