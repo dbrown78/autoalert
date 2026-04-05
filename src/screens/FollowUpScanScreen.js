@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
-import { useBLEManager } from '../hooks/useBLEManager';
+import useBLEManager from '../hooks/useBLEManager';
 
 export default function FollowUpScanScreen({ navigation, route }) {
   const { vehicleId, previousDTCs = [] } = route.params || {};

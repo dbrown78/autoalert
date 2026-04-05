@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { API_URL } from '../api/client';
-import { BleManager, State } from 'react-native-ble-plx';
-import { Platform, PermissionsAndroid } from 'react-native';
+import { State } from 'react-native-ble-plx';
+import { Platform, PermissionsAndroid, AppState } from 'react-native';
+import { getBLEManager } from '../services/BLEService';
 // ---------------------------------------------------------------------------
 // ELM327 BLE UUIDs
 // ---------------------------------------------------------------------------
@@ -71,9 +72,6 @@ const PID_MAP = {
 
 const PID_LIST = Object.keys(PID_MAP);
 
-// Singleton — avoids re-creating the BleManager on every render
-const manager = new BleManager();
-
 // ---------------------------------------------------------------------------
 // useBLEManager
 // ---------------------------------------------------------------------------
@@ -87,6 +85,8 @@ const manager = new BleManager();
 //   startScan, stopScan, connectToDevice, disconnect
 // ---------------------------------------------------------------------------
 export default function useBLEManager({ enabled = false, vehicleId = null, authToken = null } = {}) {
+  const manager = getBLEManager();
+
   const [hwState, setHwState]           = useState(State.Unknown);
   const [isScanning, setIsScanning]     = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -107,14 +107,34 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
   const pendingResolverRef  = useRef(null); // one-shot command resolver
   const hwStateRef          = useRef(State.Unknown); // always-current mirror of hwState
 
-  // ── Hardware state monitor ────────────────────────────────────────────────
+  // ── Hardware state monitor + AppState foreground resume ──────────────────
   useEffect(() => {
     const sub = manager.onStateChange((state) => {
       hwStateRef.current = state;
       setHwState(state);
     }, true);
-    return () => sub.remove();
-  }, []);
+
+    // Re-evaluate BLE hardware state when app returns to foreground.
+    // The OS may have changed BLE state (user toggled Bluetooth, etc.) while
+    // the app was backgrounded, and onStateChange won't re-fire for that.
+    const appStateSub = AppState.addEventListener('change', async (nextState) => {
+      if (nextState === 'active') {
+        try {
+          const current = await manager.state();
+          hwStateRef.current = current;
+          setHwState(current);
+        } catch {
+          // manager not ready — ignore
+        }
+      }
+    });
+
+    return () => {
+      sub.remove();
+      appStateSub.remove();
+      // DO NOT call manager.destroy() — singleton must persist across screen unmounts
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ────────────────────────────────────────────────────────
   // Map to the string-enum interface TelemetryScreen already uses
@@ -433,7 +453,7 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
     return () => {
       stopPolling();
       notifySubRef.current?.remove();
-      manager.destroy();
+      // DO NOT destroy manager — it is a shared singleton (see BLEService.js)
     };
   }, [stopPolling]);
 
