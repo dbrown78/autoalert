@@ -105,10 +105,14 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
   const responseBufferRef   = useRef('');
   const pidIndexRef         = useRef(0);
   const pendingResolverRef  = useRef(null); // one-shot command resolver
+  const hwStateRef          = useRef(State.Unknown); // always-current mirror of hwState
 
   // ── Hardware state monitor ────────────────────────────────────────────────
   useEffect(() => {
-    const sub = manager.onStateChange((state) => setHwState(state), true);
+    const sub = manager.onStateChange((state) => {
+      hwStateRef.current = state;
+      setHwState(state);
+    }, true);
     return () => sub.remove();
   }, []);
 
@@ -137,7 +141,19 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
   const startScan = useCallback(async () => {
     const ok = await requestPermissions();
     if (!ok) { setError('Bluetooth permission denied'); return; }
-    if (hwState !== State.PoweredOn) { setError('Bluetooth is off'); return; }
+
+    // Use ref so we always read the current state, not a stale closure value.
+    // Give the BLE stack up to 1.5 s to settle if it hasn't reported yet.
+    let currentState = hwStateRef.current;
+    if (currentState === State.Unknown || currentState === State.Resetting) {
+      await new Promise(r => setTimeout(r, 1500));
+      currentState = hwStateRef.current;
+    }
+
+    if (currentState === State.PoweredOff) { setError('Bluetooth is off'); return; }
+    if (currentState === State.Unauthorized) { setError('Bluetooth permission denied'); return; }
+    if (currentState === State.Unsupported) { setError('Bluetooth not supported on this device'); return; }
+    if (currentState !== State.PoweredOn) { return; } // still unknown — abort silently
 
     setNearbyDevices([]);
     setIsScanning(true);

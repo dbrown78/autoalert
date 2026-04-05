@@ -282,7 +282,7 @@ export default function OBD2ScanScreen({ navigation }) {
       <ScrollView style={S.body} contentContainerStyle={S.bodyContent}>
 
         {/* Bluetooth off warning */}
-        {isSupported && bleState === 'poweredOff' && (
+        {isSupported && bleState === 'unavailable' && (
           <View style={S.warnBanner}>
             <View style={S.warnStripe} />
             <Text style={S.warnText}>BLUETOOTH IS OFF · Enable Bluetooth to connect to your OBD-II adapter</Text>

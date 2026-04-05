@@ -414,7 +414,7 @@ export default function TelemetryScreen() {
               <Text style={[S.streamLabel, { color: C.textMuted }]}>○ STREAM INACTIVE</Text>
             )}
             {bleSupported && !bleConnected && (
-              <Text style={[S.streamLabel, { color: '#404040', marginLeft: 8 }]}>BLE OFF</Text>
+              <Text style={[S.streamLabel, { color: '#404040', marginLeft: 8 }]}>BLE IDLE</Text>
             )}
           </View>
         </View>
