@@ -113,7 +113,13 @@ export const AuthProvider = ({ children }) => {
       await loadSelectedVehicle();
       return {};
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      if (!err.response) {
+        setError('Cannot reach server. Check your connection.');
+      } else if (err.response.status === 404 || err.response.status >= 500) {
+        setError('Service unavailable. Please try again shortly.');
+      } else {
+        setError(err.response?.data?.message || 'Registration failed');
+      }
       return {};
     } finally {
       setLoading(false);
@@ -140,7 +146,13 @@ export const AuthProvider = ({ children }) => {
       if (data?.requiresVerification) {
         return { requiresVerification: true, email: data.email };
       }
-      setError(data?.message || data?.error || 'Login failed');
+      if (!err.response) {
+        setError('Cannot reach server. Check your connection.');
+      } else if (err.response.status === 404 || err.response.status >= 500) {
+        setError('Service unavailable. Please try again shortly.');
+      } else {
+        setError(data?.message || data?.error || 'Login failed');
+      }
       return {};
     } finally {
       setLoading(false);
