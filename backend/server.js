@@ -15,6 +15,7 @@ if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET.length < 3
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security headers
 app.use(helmet());
