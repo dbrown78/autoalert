@@ -1,8 +1,23 @@
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
+const Sentry = require('@sentry/node');
+const { nodeProfilingIntegration } = require('@sentry/profiling-node');
+const { scrubPII } = require('./lib/sentryScrub');
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN_BACKEND,
+  environment: process.env.NODE_ENV || 'development',
+  release: process.env.RAILWAY_GIT_COMMIT_SHA || 'local',
+  integrations: [nodeProfilingIntegration()],
+  tracesSampleRate: 0.1,
+  profilesSampleRate: 0.1,
+  beforeSend: scrubPII,
+});
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 // Validate critical env vars at startup
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
@@ -89,6 +104,9 @@ app.use('/api/sensors',   sensorRoutes);
 app.use('/api/user',      require('./routes/user'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+// Sentry error handler — must come after routes, before custom error handler
+Sentry.setupExpressErrorHandler(app);
 
 // Global error handler — never expose stack traces in production
 app.use((err, req, res, next) => {

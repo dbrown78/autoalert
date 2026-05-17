@@ -23,7 +23,9 @@
         "NSBluetoothAlwaysAndWhenInUseUsageDescription": "AutoAlert uses Bluetooth to connect to your OBD-II adapter for real-time vehicle diagnostics.",
         "NSBluetoothWhileInUseUsageDescription": "AutoAlert uses Bluetooth while in use to stream live sensor data from your OBD-II adapter.",
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": ["bluetooth-central"]
+        "UIBackgroundModes": [
+          "bluetooth-central"
+        ]
       },
       "entitlements": {
         "keychain-access-groups": [
@@ -73,14 +75,18 @@
         }
       ],
       "react-native-ble-plx",
-      "./plugins/withSuppressReturnTypeWarning"
+      "./plugins/withSuppressReturnTypeWarning",
+      ["@sentry/react-native/expo", {
+        "organization": "mhlabs201",
+        "project": "autoalert-mobile",
+        "url": "https://sentry.io/"
+      }]
     ],
     "extra": {
       "eas": {
         "projectId": "8b97a057-0daf-4d69-85ea-7e1844300b42"
       }
     },
-    "entryPoint": "./index.js",
     "runtimeVersion": {
       "policy": "appVersion"
     }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { API_URL } from '../api/client';
 import { State } from 'react-native-ble-plx';
 import { Platform, PermissionsAndroid, AppState } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 import { getBLEManager } from '../services/BLEService';
 // ---------------------------------------------------------------------------
 // ELM327 BLE UUIDs
@@ -84,7 +84,7 @@ const PID_LIST = Object.keys(PID_MAP);
 //   isScanning, nearbyDevices, isConnecting, error
 //   startScan, stopScan, connectToDevice, disconnect
 // ---------------------------------------------------------------------------
-export default function useBLEManager({ enabled = false, vehicleId = null, authToken = null } = {}) {
+export default function useBLEManager() {
   const manager = getBLEManager();
 
   const [hwState, setHwState]           = useState(State.Unknown);
@@ -112,6 +112,7 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
     const sub = manager.onStateChange((state) => {
       hwStateRef.current = state;
       setHwState(state);
+      Sentry.addBreadcrumb({ category: 'ble', message: `BLE state → ${state}`, level: 'info' });
     }, true);
 
     // Re-evaluate BLE hardware state when app returns to foreground.
@@ -180,7 +181,13 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
     setError(null);
 
     manager.startDeviceScan(null, { allowDuplicates: false }, (err, found) => {
-      if (err) { setError(err.message); setIsScanning(false); return; }
+      if (err) {
+        Sentry.addBreadcrumb({ category: 'ble', message: `Scan error: ${err.message}`, level: 'error' });
+        Sentry.captureException(err);
+        setError(err.message);
+        setIsScanning(false);
+        return;
+      }
       if (found?.name) {
         setNearbyDevices((prev) => {
           if (prev.find((d) => d.id === found.id)) return prev;
@@ -333,15 +340,23 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
       try {
         const raw03 = await sendCommandAndWait('03\r', 3000);
         setDtcCodes(parseDTCResponse(raw03, '43'));
-      } catch (e) { console.warn('[BLE] init DTC read:', e.message); }
+      } catch (e) {
+        console.warn('[BLE] init DTC read:', e.message);
+        Sentry.captureException(e, { extra: { command: '03' } });
+      }
 
       try {
         const raw07 = await sendCommandAndWait('07\r', 3000);
         setPendingDtcCodes(parseDTCResponse(raw07, '47'));
-      } catch (e) { console.warn('[BLE] init pending DTC read:', e.message); }
+      } catch (e) {
+        console.warn('[BLE] init pending DTC read:', e.message);
+        Sentry.captureException(e, { extra: { command: '07' } });
+      }
 
       startPolling();
     } catch (err) {
+      Sentry.addBreadcrumb({ category: 'ble', message: `Connect failed: ${err.message}`, level: 'error' });
+      Sentry.captureException(err);
       setError(err.message);
       setIsConnected(false);
     } finally {
@@ -405,48 +420,6 @@ export default function useBLEManager({ enabled = false, vehicleId = null, authT
       startPolling();
     }
   }, [sendCommandAndWait, stopPolling, startPolling]);
-
-  // ── Upload sensor readings to backend every 30 s when connected ───────────
-  useEffect(() => {
-    if (!isConnected || !vehicleId || !authToken) return;
-
-    const sensorMap = {
-      rpm: 'rpm', speed: 'speed', coolant_temp: 'coolant_temp',
-      throttle: 'throttle_position', engine_load: 'engine_load',
-      voltage: 'battery_voltage', intake_temp: 'intake_temp',
-      fuel_trim: 'fuel_trim', trans_fluid_temp: 'trans_fluid_temp',
-      trans_gear: 'trans_gear', ambient_temp: 'ambient_temp',
-      fuel_type: 'fuel_type', fuel_rail_pressure: 'fuel_rail_pressure',
-    };
-
-    const upload = async () => {
-      const snapshot = sensorsRef.current;
-      if (!snapshot || Object.keys(snapshot).length === 0) return;
-
-      const readings = Object.entries(snapshot)
-        .filter(([, v]) => v !== null && v !== undefined)
-        .map(([key, value]) => ({
-          sensor_type: sensorMap[key] || key,
-          value: Number(value),
-          timestamp: new Date().toISOString(),
-        }));
-
-      if (readings.length === 0) return;
-
-      try {
-        await fetch(`${API_URL}/api/sensors/${vehicleId}/readings`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
-          body: JSON.stringify({ readings }),
-        });
-      } catch (e) {
-        console.warn('[BLE] sensor upload failed:', e.message);
-      }
-    };
-
-    const interval = setInterval(upload, 30000);
-    return () => clearInterval(interval);
-  }, [isConnected, vehicleId, authToken]);
 
   // ── Cleanup on unmount ────────────────────────────────────────────────────
   useEffect(() => {

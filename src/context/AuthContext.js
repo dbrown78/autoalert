@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 import client from '../api/client';
 import { registerPushToken } from '../hooks/usePushToken';
 
@@ -88,6 +89,7 @@ export const AuthProvider = ({ children }) => {
     setAuth(tok);
     setUser(userData);
     setToken(tok);
+    Sentry.setUser({ id: String(userData.id) });
     await storage.setItem('token', tok);
     await loadSelectedVehicle();
     registerPushToken(tok).catch(() => {});
@@ -106,6 +108,7 @@ export const AuthProvider = ({ children }) => {
       setAuth(res.data.token);
       setUser(res.data.user);
       setToken(res.data.token);
+      Sentry.setUser({ id: String(res.data.user.id) });
       await storage.setItem('token', res.data.token);
       if (res.data.refreshToken) {
         await storage.setItem('refresh_token', res.data.refreshToken);
@@ -134,6 +137,7 @@ export const AuthProvider = ({ children }) => {
       setAuth(res.data.token);
       setUser(res.data.user);
       setToken(res.data.token);
+      Sentry.setUser({ id: String(res.data.user.id) });
       await storage.setItem('token', res.data.token);
       if (res.data.refreshToken) {
         await storage.setItem('refresh_token', res.data.refreshToken);
@@ -164,6 +168,7 @@ export const AuthProvider = ({ children }) => {
       const refreshToken = await storage.getItem('refresh_token');
       await client.post('/auth/logout', { refreshToken }).catch(() => {});
     } catch {}
+    Sentry.setUser(null);
     setAuth(null);
     setUser(null);
     setToken(null);

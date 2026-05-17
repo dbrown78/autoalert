@@ -8,12 +8,33 @@ Foresight prediction microservice.
 from __future__ import annotations
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Dict, List, Optional
 
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+# Insert parent dir so sentry_scrub is importable from api/
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from sentry_scrub import scrub_pii
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+
+sentry_sdk.init(
+    dsn=os.environ.get('SENTRY_DSN_FORESIGHT'),
+    environment=os.environ.get('RAILWAY_ENVIRONMENT', 'development'),
+    release=os.environ.get('RAILWAY_GIT_COMMIT_SHA', 'local'),
+    integrations=[
+        FastApiIntegration(),
+        LoggingIntegration(level=logging.WARNING, event_level=logging.ERROR),
+    ],
+    traces_sample_rate=0.1,
+    before_send=scrub_pii,
+)
 
 log = logging.getLogger(__name__)
 
@@ -110,6 +131,7 @@ async def lifespan(app: FastAPI):
 
     except Exception as e:
         log.error(f"Predictor load failed: {e}")
+        sentry_sdk.capture_exception(e)
         # Allow startup to continue — /health will report model=missing
         _predictor = None
 
@@ -178,6 +200,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail=str(e))
         except Exception as e:
             log.error(f"Prediction failed for {req.vehicle_id}: {e}")
+            sentry_sdk.capture_exception(e)
             raise HTTPException(status_code=500, detail="Prediction error")
 
     # ── GET /predict/demo/{vehicle_id} ────────────────────────────────────────

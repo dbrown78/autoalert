@@ -1,9 +1,21 @@
+import * as Sentry from '@sentry/react-native';
+import { scrubPII } from './src/lib/sentryScrub';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN_MOBILE,
+  environment: __DEV__ ? 'development' : 'production',
+  tracesSampleRate: __DEV__ ? 0 : 0.1,
+  beforeSend: scrubPII,
+  enableNativeNagger: false,
+});
+
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { BLEProvider } from './src/context/BLEContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
@@ -29,6 +41,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     console.error('[ErrorBoundary]', error, info);
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
   }
 
   render() {
@@ -144,12 +157,16 @@ function AppNavigator() {
   );
 }
 
-export default function App() {
+function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <AppNavigator />
+        <BLEProvider>
+          <AppNavigator />
+        </BLEProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
 }
+
+export default Sentry.wrap(App);
