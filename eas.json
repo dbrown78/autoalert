@@ -15,6 +15,9 @@
       "autoIncrement": true,
       "distribution": "store",
       "credentialsSource": "remote",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      },
       "android": {
         "buildType": "app-bundle"
       }
