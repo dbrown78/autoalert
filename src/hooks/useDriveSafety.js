@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import client from '../api/client';
 import useSensorStream from './useSensorStream';
-import useBLEManager from './useBLEManager';
+import { useBLE } from '../context/BLEContext';
 import { SENSOR_META, SENSOR_KEYS, getSensorStatus } from '../utils/sensorThresholds';
 
 /**
@@ -30,9 +30,9 @@ import { SENSOR_META, SENSOR_KEYS, getSensorStatus } from '../utils/sensorThresh
  *   hasABS:  boolean — true when ABS module sensor data has been seen
  *   hasTCM:  boolean — true when TCM sensor data has been seen
  */
-export default function useDriveSafety(vehicleId, { bleEnabled = false } = {}) {
-  const { sensorData: streamSensors, isStreaming: streaming } = useSensorStream({ enabled: bleEnabled });
-  const { bleState, sensors: bleSensors } = useBLEManager({ enabled: bleEnabled });
+export default function useDriveSafety(vehicleId) {
+  const { sensorData: streamSensors, isStreaming: streaming } = useSensorStream();
+  const { bleState, sensors: bleSensors } = useBLE();
   const bleConnected = bleState === 'connected';
 
   const [foresightAlerts, setForesightAlerts] = useState([]);

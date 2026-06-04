@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
-import useBLEManager from './useBLEManager';
+import { useBLE } from '../context/BLEContext';
 import { SENSOR_KEYS } from '../utils/sensorThresholds';
 
-const useSensorStream = ({ enabled = false } = {}) => {
+const useSensorStream = () => {
   const [sensorData, setSensorData] = useState({});
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState(null);
   const intervalRef = useRef(null);
 
-  const { connectedDevice, readSensorData, isConnected } = useBLEManager({ enabled });
+  const { connectedDevice, readSensorData, isConnected } = useBLE();
 
   useEffect(() => {
     if (!isConnected || !connectedDevice) {

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
-import useBLEManager from '../hooks/useBLEManager';
+import { useBLE } from '../context/BLEContext';
 import BLEDevicePicker from '../components/BLEDevicePicker';
 import { initELM327, pollAllPIDs, requestDTCs, requestPendingDTCs } from '../utils/OBD2Protocol';
 
@@ -78,7 +78,7 @@ export default function OBD2ScanScreen({ navigation }) {
     devices, connecting, connectionError,
     startScan, stopScan, connect: bleConnect, disconnect,
     requestManualScan, sendCommand,
-  } = useBLEManager({ enabled: true });
+  } = useBLE();
 
   // Map BLE state to the legacy adapterStatus shape used by <StatusBar>
   const adapterStatus =

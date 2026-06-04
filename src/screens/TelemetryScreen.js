@@ -4,8 +4,9 @@ import {
   ActivityIndicator, TouchableOpacity, Animated, useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../api/client';
 import useSensorStream from '../hooks/useSensorStream';
-import useBLEManager from '../hooks/useBLEManager';
+import { useBLE } from '../context/BLEContext';
 import useDriveSafety from '../hooks/useDriveSafety';
 import { useSensorHistory } from '../hooks/useSensorHistory';
 import DriveSafetyCard from '../components/DriveSafetyCard';
@@ -295,7 +296,7 @@ export default function TelemetryScreen() {
   const isNarrow = screenWidth < 375;
 
   const [streamEnabled, setStreamEnabled] = useState(false);
-  const { sensorData: streamSensors, isStreaming: streaming, streamError: error } = useSensorStream({ enabled: streamEnabled });
+  const { sensorData: streamSensors, isStreaming: streaming, streamError: error } = useSensorStream();
   const {
     bleState,
     sensors: bleSensors,
@@ -309,14 +310,53 @@ export default function TelemetryScreen() {
     disconnect: bleDisconnect,
     dtcCodes,
     pendingDtcCodes,
-  } = useBLEManager({ enabled: true, vehicleId, authToken: token });
+    isConnected: bleConnectedRaw,
+  } = useBLE();
   const {
     status: safetyStatus,
     reason: safetyReason,
     source: safetySource,
     hasABS,
     hasTCM,
-  } = useDriveSafety(vehicleId, { bleEnabled: true });
+  } = useDriveSafety(vehicleId);
+
+  // ── Upload sensor readings to backend every 30 s when connected ────────────
+  const bleSensorsRef = useRef({});
+  useEffect(() => { bleSensorsRef.current = bleSensors; }, [bleSensors]);
+  useEffect(() => {
+    if (!bleConnectedRaw || !vehicleId || !token) return;
+    const SENSOR_MAP = {
+      rpm: 'rpm', speed: 'speed', coolant_temp: 'coolant_temp',
+      throttle: 'throttle_position', engine_load: 'engine_load',
+      voltage: 'battery_voltage', intake_temp: 'intake_temp',
+      fuel_trim: 'fuel_trim', trans_fluid_temp: 'trans_fluid_temp',
+      trans_gear: 'trans_gear', ambient_temp: 'ambient_temp',
+      fuel_type: 'fuel_type', fuel_rail_pressure: 'fuel_rail_pressure',
+    };
+    const upload = async () => {
+      const snapshot = bleSensorsRef.current;
+      if (!snapshot || Object.keys(snapshot).length === 0) return;
+      const readings = Object.entries(snapshot)
+        .filter(([, v]) => v !== null && v !== undefined)
+        .map(([key, value]) => ({
+          sensor_type: SENSOR_MAP[key] || key,
+          value: Number(value),
+          timestamp: new Date().toISOString(),
+        }));
+      if (readings.length === 0) return;
+      try {
+        await fetch(`${API_URL}/api/sensors/${vehicleId}/readings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ readings }),
+        });
+      } catch (e) {
+        console.warn('[BLE] sensor upload failed:', e.message);
+      }
+    };
+    const interval = setInterval(upload, 30000);
+    return () => clearInterval(interval);
+  }, [bleConnectedRaw, vehicleId, token]);
 
   const {
     seriesMap, window: histWindow, loading: histLoading,

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
-import useBLEManager from '../hooks/useBLEManager';
+import { useBLE } from '../context/BLEContext';
 
 export default function FollowUpScanScreen({ navigation, route }) {
   const { vehicleId, previousDTCs = [] } = route.params || {};
-  const { isConnected, requestDTCs, requestPendingDTCs, startScan, isScanning } = useBLEManager();
+  const { isConnected, requestDTCs, requestPendingDTCs, startScan, isScanning } = useBLE();
   const [scanning, setScanning] = useState(false);
   const [results, setResults] = useState(null);
 
