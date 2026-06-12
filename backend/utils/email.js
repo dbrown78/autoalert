@@ -1,26 +1,10 @@
-const nodemailer = require('nodemailer');
-
-function createTransporter() {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return null;
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-  });
-}
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendEmail({ to, subject, text, html }) {
-  const transporter = createTransporter();
-  if (!transporter) {
-    console.warn('[email] EMAIL_USER/EMAIL_PASS not set — skipping send.');
-    return;
-  }
-  await transporter.sendMail({
-    from: `"AutoAlert by ODIN" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    text,
-    html,
-  });
+    const from = process.env.EMAIL_FROM || 'dbrownnj365@gmail.com';
+    const msg = { to, from, subject, text, html };
+    await sgMail.send(msg);
 }
 
 module.exports = { sendEmail };
