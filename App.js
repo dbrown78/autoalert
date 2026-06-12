@@ -19,6 +19,7 @@ import { BLEProvider } from './src/context/BLEContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import EmailVerificationScreen from './src/screens/EmailVerificationScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import DTCDetailScreen from './src/screens/DTCDetailScreen';
 import MechanicFinderScreen from './src/screens/MechanicFinderScreen';
@@ -150,6 +151,7 @@ function AppNavigator() {
             <Stack.Screen name="Login"             component={LoginScreen} />
             <Stack.Screen name="Register"          component={RegisterScreen} />
             <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
+            <Stack.Screen name="ForgotPassword"    component={ForgotPasswordScreen} />
           </>
         )}
       </Stack.Navigator>

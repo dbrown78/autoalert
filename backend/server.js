@@ -92,6 +92,7 @@ sensorBuffer.start();
 
 // Routes
 app.use('/api/auth',      require('./routes/auth'));
+app.use('/api/auth',      require('./routes/passwordReset'));
 app.use('/api/vehicles',  require('./routes/vehicles'));
 app.use('/api/dtc',       lookupLimiter, require('./routes/dtc'));
 app.use('/api/mechanics', lookupLimiter, require('./routes/mechanics'));
