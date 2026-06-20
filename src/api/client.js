@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 
 export const API_URL = __DEV__
-  ? 'http://localhost:3000'
+  ? 'http://localhost:3001'
   : 'https://odin-backend-production-3220.up.railway.app';
 
 const client = axios.create({ baseURL: `${API_URL}/api` });

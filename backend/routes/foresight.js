@@ -16,6 +16,7 @@ const express           = require('express');
 const router            = express.Router();
 const authenticateToken = require('../middleware/auth');
 const { analyzeVehicle, getHealthScores } = require('../services/foresight');
+const { dispatch } = require('../services/alertDispatcher');
 
 const FORESIGHT_URL = process.env.FORESIGHT_API_URL || 'http://localhost:8001';
 const TIMEOUT_MS    = 10_000;
@@ -65,7 +66,7 @@ router.get('/health', async (req, res) => {
  * Fetch failure prediction for a real user vehicle.
  * Requires auth middleware (applied in app.js route registration).
  */
-router.get('/predict/:vehicleId', async (req, res) => {
+router.get('/predict/:vehicleId', authenticateToken, async (req, res) => {
   const { vehicleId } = req.params;
   const lookbackDays  = parseInt(req.query.days) || 7;
 
@@ -77,6 +78,18 @@ router.get('/predict/:vehicleId', async (req, res) => {
         lookback_days: lookbackDays,
       }),
     });
+
+    // Fire-and-forget: dispatch alerts after responding to client.
+    // setImmediate ensures the response is sent first; dispatch errors
+    // are caught and logged without affecting the predict response.
+    const userId = req.userId;
+    const vidInt = parseInt(vehicleId, 10);
+    setImmediate(() => {
+      dispatch(userId, vidInt, prediction).catch(err => {
+        console.error('[foresight/predict] alertDispatcher error:', err.message);
+      });
+    });
+
     res.json(prediction);
   } catch (err) {
     const status = err.statusCode === 404 ? 404 : 500;
