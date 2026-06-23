@@ -53,7 +53,7 @@ export default function VehicleScreen({ navigation }) {
     setSaving(true);
     setError(null);
     try {
-      const res = await client.post('/vehicles', { year, make, model, trim, mileage: mileage ? parseInt(mileage) : null }, { headers });
+      const res = await client.post('/vehicles', { year: parseInt(year, 10), make, model, trim, mileage: mileage ? parseInt(mileage) : null }, { headers });
       setVehicles([res.data.vehicle, ...vehicles]);
       setShowForm(false);
       setYear(''); setMake(''); setModel(''); setTrim(''); setMileage('');
