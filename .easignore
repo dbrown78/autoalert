@@ -10,3 +10,7 @@ coverage/
 ios/Pods/
 ios/build/
 ios/DerivedData/
+foresight-sim/
+marketing/
+*.ipa
+backend/
