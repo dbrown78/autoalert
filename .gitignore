@@ -37,7 +37,6 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
-/ios
 /android
 backend/.env
 foresight-sim/telemetry-generator/output/*.csv
