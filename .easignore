@@ -7,3 +7,6 @@ __tests__/
 coverage/
 *.test.js
 *.spec.js
+ios/Pods/
+ios/build/
+ios/DerivedData/
